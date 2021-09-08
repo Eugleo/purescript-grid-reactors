@@ -1,4 +1,4 @@
-module Reactor.Internal.Types where
+module Reactor.Internal.Types (Cell(..)) where
 
 import Prelude
 import Color (Color)

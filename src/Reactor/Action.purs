@@ -1,4 +1,19 @@
-module Reactor.Action where
+module Reactor.Action
+  ( Action(..)
+  , utilities
+  , randomPositive
+  , randomInRange
+  , modify
+  , modify_
+  , get
+  , pause
+  , unpause
+  , togglePause
+  , preventDefaultBehavior
+  , executeDefaultBehavior
+  , ActionF(..)
+  , Utilities
+  ) where
 
 import Prelude
 
@@ -69,8 +84,8 @@ pause = Action $ liftF $ Modify (\s -> s { paused = true }) (const unit)
 unpause :: forall world m. Action m { paused :: Boolean | world } Unit
 unpause = Action $ liftF $ Modify (\s -> s { paused = false }) (const unit)
 
-triggerPause :: forall world m. Action m { paused :: Boolean | world } Unit
-triggerPause = Action $ liftF $ Modify (\s -> s { paused = not s.paused }) (const unit)
+togglePause :: forall world m. Action m { paused :: Boolean | world } Unit
+togglePause = Action $ liftF $ Modify (\s -> s { paused = not s.paused }) (const unit)
 
 preventDefaultBehavior
   :: forall world m. Action m { paused :: Boolean | world } DefaultBehavior

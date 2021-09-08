@@ -1,4 +1,4 @@
-module Reactor.Types where
+module Reactor.Types (Reactor, State, Properties) where
 
 import Data.Grid (Grid)
 import Data.Maybe (Maybe)

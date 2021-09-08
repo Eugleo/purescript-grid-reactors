@@ -1,4 +1,4 @@
-module Reactor.Common where
+module Reactor.Common (withJust) where
 
 import Prelude
 

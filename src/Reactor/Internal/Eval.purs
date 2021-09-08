@@ -1,4 +1,4 @@
-module Reactor.Internal.Eval where
+module Reactor.Internal.Eval (evalAction, renderDrawing) where
 
 import Prelude
 
