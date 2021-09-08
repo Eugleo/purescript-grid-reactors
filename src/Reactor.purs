@@ -4,6 +4,8 @@ module Reactor
   , module Colors
   , module Reactor.Graphics.CoordinateSystem
   , module Reactor.Graphics.Drawing
+  , module Reactor.Types
+  , module Reactor.Page
   ) where
 
 import Prelude
