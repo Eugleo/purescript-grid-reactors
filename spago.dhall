@@ -12,7 +12,8 @@ to generate this file without the comments in this block.
 -}
 { name = "grid-reactors"
 , dependencies =
-  [ "arrays"
+  [ "aff"
+  , "arrays"
   , "canvas-action"
   , "colors"
   , "console"

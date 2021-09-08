@@ -8,6 +8,7 @@ module Reactor.Graphics.Drawing
   , Shape(..)
   , Size
   , Point
+  , cell
   ) where
 
 import Prelude
