@@ -1,3 +1,6 @@
+-- | A predefined color palette based on the default [Tailwind CSS](https://tailwindcss.com/docs/customizing-colors) color scheme.
+-- | See the URL for details and previews. This module should be imported qualified, `import Reactor.Graphics.Colors as Color`.
+
 module Reactor.Graphics.Colors
   ( gray50
   , gray100
@@ -68,9 +71,6 @@ import Partial.Unsafe (unsafePartial)
 
 fromHex :: String -> Color
 fromHex = (unsafePartial fromJust) <<< fromHexString
-
--- The following colors are a part of the default Tailwind CSS color scheme
--- https://tailwindcss.com/docs/customizing-colors
 
 gray50 :: Color
 gray50 = fromHex "#F9FAFB"

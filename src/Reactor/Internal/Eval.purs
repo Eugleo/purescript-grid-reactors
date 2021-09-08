@@ -16,10 +16,9 @@ import Halogen.Hooks (HookM, StateId)
 import Halogen.Hooks as Hooks
 import Reactor.Action (ActionF(..))
 import Reactor.Action as Reactor
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), relativeToGrid)
+import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), relativeToGrid, Point)
 import Reactor.Graphics.Drawing (Drawing, DrawingF(..), DrawingM(..), Shape(..))
-import Reactor.Internal.Types (Cell(..))
-import Reactor.Types (State)
+import Reactor.Internal.Types (Cell(..), State)
 import Type.Proxy (Proxy(..))
 
 evalAction
@@ -51,10 +50,12 @@ evalAction { width, cellSize, height } stateId (Reactor.Action action) =
       h = toNumber height
       cs = toNumber cellSize
       clip n b = max (min n b) 0.0
+      bound :: CoordinateSystem Point -> CoordinateSystem Point
       bound = case _ of
         RelativeToCanvas { x, y } ->
-          { x: clip x (cs * w - 0.01), y: clip y (cs * h - 0.01) }
-        RelativeToGrid { x, y } -> { x: clip x (w - 1.0), y: clip y (h - 1.0) }
+          RelativeToCanvas { x: clip x (cs * w - 0.01), y: clip y (cs * h - 0.01) }
+        RelativeToGrid { x, y } ->
+          RelativeToGrid { x: clip x (w - 1.0), y: clip y (h - 1.0) }
     pure $ cc { width, cellSize, height, bound }
   go _ (Lift ma) = lift ma
 

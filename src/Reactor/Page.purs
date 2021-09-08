@@ -29,7 +29,6 @@ import Halogen.Hooks (HookM)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
-import Reactor.Internal.Helpers (withJust)
 import Reactor.Events
   ( MouseEventType(..)
   , TickEvent(..)
@@ -39,8 +38,9 @@ import Reactor.Events
   , windowPerformanceNow
   )
 import Reactor.Internal.Eval (evalAction, renderDrawing)
-import Reactor.Internal.Types (Cell(..))
-import Reactor.Types (Reactor, Properties, State)
+import Reactor.Internal.Helpers (withJust)
+import Reactor.Internal.Types (Cell(..), Properties, State)
+import Reactor.Types (Reactor, Configuration)
 import Web.HTML (window) as Web
 import Web.HTML.HTMLCanvasElement as HTMLCanvasElement
 import Web.HTML.HTMLDocument as HTMLDocument
@@ -56,12 +56,15 @@ canvasId = "canvas"
 type StateId m world = Hooks.StateId (State m world)
 type PropsId m world = Hooks.StateId (Properties m world)
 
+-- | Defines the Halogen component that runs and renders a reactor. The component is based on Halogen hooks.
+-- | Usually you don't need to call this yourself; instead, you should use `Reactor.runReactor` that calls this internally.
 component
   :: forall world q i o m
    . MonadEffect m
   => Reactor m { paused :: Boolean | world }
+  -> Configuration
   -> H.Component q i o m
-component { title, init, draw, onKey, onMouse, onTick, width, height } =
+component { init, draw, onKey, onMouse, onTick } { title, width, height } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ stateId <- Hooks.useState
       { context: Nothing
