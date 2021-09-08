@@ -1,4 +1,4 @@
-module Reactor.Common (withJust) where
+module Reactor.Internal.Helpers (withJust) where
 
 import Prelude
 

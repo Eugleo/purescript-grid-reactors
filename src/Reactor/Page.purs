@@ -29,7 +29,7 @@ import Halogen.Hooks (HookM)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
-import Reactor.Common (withJust)
+import Reactor.Internal.Helpers (withJust)
 import Reactor.Events
   ( MouseEventType(..)
   , TickEvent(..)

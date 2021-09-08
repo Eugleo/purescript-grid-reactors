@@ -20,7 +20,7 @@ import Data.Foldable (for_)
 import Data.Grid (Grid, enumerate)
 import Data.Maybe (Maybe)
 import Data.Tuple.Nested ((/\))
-import Reactor.Common (withJust)
+import Reactor.Internal.Helpers (withJust)
 import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), grid, wrt)
 
 type Point = { x :: Number, y :: Number }
