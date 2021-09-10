@@ -1,44 +1,37 @@
 {
-    "name": "purescript-grid-reactors",
-    "license": [
-        "MIT"
-    ],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Eugleo/purescript-grid-reactors.git"
-    },
-    "ignore": [
-        "**/.*",
-        "node_modules",
-        "bower_components",
-        "output"
-    ],
-    "dependencies": {
-        "purescript-aff": "^v6.0.0",
-        "purescript-arrays": "^v6.0.1",
-        "purescript-canvas-action": "https://github.com/artemisSystem/purescript-canvas-action.git#43de19ee369d1ff9fe7eff1e583b828809fd9e36",
-        "purescript-colors": "^v6.0.0",
-        "purescript-console": "^v5.0.0",
-        "purescript-effect": "^v3.0.0",
-        "purescript-exceptions": "^v5.0.0",
-        "purescript-foldable-traversable": "^v5.0.1",
-        "purescript-free": "^v6.0.1",
-        "purescript-halogen": "^v6.1.3",
-        "purescript-halogen-hooks": "https://github.com/thomashoneyman/purescript-halogen-hooks.git#v0.5.0",
-        "purescript-halogen-subscriptions": "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git#v1.0.0",
-        "purescript-heterogeneous": "^v0.5.1",
-        "purescript-integers": "^v5.0.0",
-        "purescript-maybe": "^v5.0.0",
-        "purescript-partial": "^v3.0.0",
-        "purescript-prelude": "^v5.0.1",
-        "purescript-psci-support": "^v5.0.0",
-        "purescript-random": "^v5.0.0",
-        "purescript-st": "^v5.0.1",
-        "purescript-tailrec": "^v5.0.1",
-        "purescript-transformers": "^v5.2.0",
-        "purescript-tuples": "^v6.0.1",
-        "purescript-web-events": "^v3.0.0",
-        "purescript-web-html": "^v3.1.0",
-        "purescript-web-uievents": "^v3.0.0"
-    }
+  "name": "purescript-grid-reactors",
+  "license": ["MIT"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Eugleo/purescript-grid-reactors.git"
+  },
+  "ignore": ["**/.*", "node_modules", "bower_components", "output"],
+  "dependencies": {
+    "purescript-aff": "^v6.0.0",
+    "purescript-arrays": "^v6.0.1",
+    "purescript-colors": "^v6.0.0",
+    "purescript-console": "^v5.0.0",
+    "purescript-effect": "^v3.0.0",
+    "purescript-exceptions": "^v5.0.0",
+    "purescript-foldable-traversable": "^v5.0.1",
+    "purescript-canvas-action": "artemisSystem/purescript-canvas-action#43de19ee369d1ff9fe7eff1e583b828809fd9e36",
+    "purescript-free": "^v6.0.1",
+    "purescript-halogen": "^v6.1.3",
+    "purescript-halogen-hooks": "https://github.com/thomashoneyman/purescript-halogen-hooks.git#v0.5.0",
+    "purescript-halogen-subscriptions": "https://github.com/purescript-halogen/purescript-halogen-subscriptions.git#v1.0.0",
+    "purescript-heterogeneous": "^v0.5.1",
+    "purescript-integers": "^v5.0.0",
+    "purescript-maybe": "^v5.0.0",
+    "purescript-partial": "^v3.0.0",
+    "purescript-prelude": "^v5.0.1",
+    "purescript-psci-support": "^v5.0.0",
+    "purescript-random": "^v5.0.0",
+    "purescript-st": "^v5.0.1",
+    "purescript-tailrec": "^v5.0.1",
+    "purescript-transformers": "^v5.2.0",
+    "purescript-tuples": "^v6.0.1",
+    "purescript-web-events": "^v3.0.0",
+    "purescript-web-html": "^v3.1.0",
+    "purescript-web-uievents": "^v3.0.0"
+  }
 }
