@@ -14,7 +14,15 @@
 -- | Also, the world needs to have at least a boolean field named `paused`, that signalizes
 -- | to the reactor whether the internal clock should be ticking or not.
 
-module Reactor where
+module Reactor
+  ( runReactor
+  , module Reactor.Action
+  , module Reactor.Graphics.CoordinateSystem
+  , module Reactor.Graphics.Drawing
+  , module Reactor.Types
+  , module Reactor.Page
+  , module Reactor.Events
+  ) where
 
 import Prelude
 
@@ -22,6 +30,17 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
+import Reactor.Action
+  ( executeDefaultBehavior
+  , get
+  , modify_
+  , preventDefaultBehavior
+  , togglePause
+  , utilities
+  )
+import Reactor.Graphics.CoordinateSystem (CoordinateSystem, canvas, grid, wrt)
+import Reactor.Graphics.Drawing (fill, cell)
+import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
 import Reactor.Page (component) as Reactor.Page
 import Reactor.Types (Reactor, Configuration)
 
