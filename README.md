@@ -18,7 +18,7 @@ import Reactor.Action
 import Reactor.Events (KeypressEvent(..))
 import Reactor.Graphics.Colors as Color
 import Reactor.Graphics.CoordinateSystem
-  (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, wrt)
+  (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, relativeTo)
 import Reactor.Graphics.Drawing (fill, tile)
 import Reactor.Types (Reactor)
 
@@ -29,7 +29,7 @@ type World =
 
 reactor :: forall m. Reactor m World
 reactor =
-  { init: { dot: { x: 0, y: 0 } `wrt` grid, paused: true }
+  { init: { dot: { x: 0, y: 0 } `relativeTo` grid, paused: true }
   , draw: \{ dot } -> fill Color.blue400 $ tile dot
   , onTick: \_ -> pure unit
   , onKey: \(KeypressEvent key _) -> do

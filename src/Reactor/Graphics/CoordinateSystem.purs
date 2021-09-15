@@ -4,7 +4,7 @@
 
 module Reactor.Graphics.CoordinateSystem
   ( CoordinateSystem(..)
-  , wrt
+  , relativeTo
   , canvas
   , grid
   , relativeToGrid
@@ -35,16 +35,16 @@ withCoords (RelativeToCanvas x) f = f x
 -- | With respect to. Used to wrap things in a coordinate system in a more pleasant way
 -- | than what would be possible with the constructors. For example
 -- | ```
--- | { x: 1, y: 1 } `wrt` grid == RelativeToGrid { x: toNumber 1, y: toNumber 1}
+-- | { x: 1, y: 1 } `relativeTo` grid == RelativeToGrid { x: toNumber 1, y: toNumber 1}
 -- | ```
-wrt :: forall a b. a -> (a -> CoordinateSystem b) -> CoordinateSystem b
-wrt = (#)
+relativeTo :: forall a b. a -> (a -> CoordinateSystem b) -> CoordinateSystem b
+relativeTo = (#)
 
--- | To be used with `wrt`, usually `{ some record } `wrt` canvas.
+-- | To be used with `relativeTo`, usually `{ some record } `relativeTo` canvas.
 canvas :: forall a. a -> CoordinateSystem a
 canvas = RelativeToCanvas
 
--- | To be used with `wrt`, usually `{ some record } `wrt` grid. Automatically converts
+-- | To be used with `relativeTo`, usually `{ some record } `relativeTo` grid. Automatically converts
 -- | the numbers in `{ some record }` from `Int` to `Number`.
 grid :: forall a b. HMap (Int -> Number) a b => a -> CoordinateSystem b
 grid = RelativeToGrid <<< hmap (\n -> toNumber n)

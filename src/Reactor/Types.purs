@@ -42,7 +42,7 @@ import Reactor.Graphics.Drawing (Drawing)
 -- | import Reactor.Events (KeypressEvent(..))
 -- | import Reactor.Graphics.Colors as Color
 -- | import Reactor.Graphics.CoordinateSystem
--- |   (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, wrt)
+-- |   (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, relativeTo)
 -- | import Reactor.Graphics.Drawing (fill, tile)
 -- | import Reactor.Types (Reactor)
 -- |
@@ -53,7 +53,7 @@ import Reactor.Graphics.Drawing (Drawing)
 -- |
 -- | reactor :: forall m. Reactor m World
 -- | reactor =
--- |   { init: { player: { x: 0, y: 0 } `wrt` grid, paused: true }
+-- |   { init: { player: { x: 0, y: 0 } `relativeTo` grid, paused: true }
 -- |   , draw: \{ player } -> fill Color.blue400 $ tile player
 -- |   , onTick: \_ -> pure unit
 -- |   , onKey: \(KeypressEvent key _) -> do

@@ -39,7 +39,13 @@ import Reactor.Action
   , utilities
   )
 import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem, canvas, grid, withCoords, wrt)
+import Reactor.Graphics.CoordinateSystem
+  ( CoordinateSystem
+  , canvas
+  , grid
+  , withCoords
+  , relativeTo
+  )
 import Reactor.Graphics.Drawing (fill, tile)
 import Reactor.Page (component) as Reactor.Page
 import Reactor.Types (Reactor, Configuration)

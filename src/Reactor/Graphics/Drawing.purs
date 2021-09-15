@@ -24,7 +24,7 @@ import Data.Grid (Grid, enumerate)
 import Data.Maybe (Maybe)
 import Data.Tuple.Nested ((/\))
 import Reactor.Internal.Helpers (withJust)
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), grid, wrt, Point)
+import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), grid, relativeTo, Point)
 
 type Size = { width :: Number, height :: Number }
 
@@ -82,7 +82,7 @@ mapOver :: forall a. Grid a -> (a -> Maybe Color) -> Drawing
 mapOver g f =
   for_ (enumerate g) $ \(point /\ x) ->
     withJust (f x) \color ->
-      fill color $ tile $ point `wrt` grid
+      fill color $ tile $ point `relativeTo` grid
 
 -- | Produce a drawing from a grid. For each tile in the grid, call the supplied function
 -- | to obtain its color. The function receives not only the value of the tile, but also its index.
@@ -94,4 +94,4 @@ mapOverWithIndex
 mapOverWithIndex g f =
   for_ (enumerate g) $ \(point /\ x) ->
     withJust (f point x) \color ->
-      fill color $ tile $ point `wrt` grid
+      fill color $ tile $ point `relativeTo` grid
