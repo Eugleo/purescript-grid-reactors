@@ -19,6 +19,8 @@ module Reactor.Graphics.CoordinateSystem
 import Prelude
 
 import Data.Int (floor, toNumber)
+import Data.Generic.Rep (class Generic)
+import Data.Show.Generic (genericShow)
 import Heterogeneous.Mapping (class HMap, hmap)
 
 type Point = { x :: Number, y :: Number }
@@ -26,6 +28,10 @@ type Point = { x :: Number, y :: Number }
 data CoordinateSystem a = RelativeToGrid a | RelativeToCanvas a
 
 derive instance functorCoordinateSystem :: Functor CoordinateSystem
+
+derive instance genericMouseEvent :: Generic (CoordinateSystem a) _
+instance showMouseEvent :: Show a => Show (CoordinateSystem a) where
+  show = genericShow
 
 -- | Unwrap the wrapped thing and pass it to a function.
 withCoords :: forall a b. CoordinateSystem a -> (a -> b) -> b

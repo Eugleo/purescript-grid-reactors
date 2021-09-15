@@ -18,6 +18,7 @@ import Data.Show.Generic (genericShow)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
+import Reactor.Graphics.CoordinateSystem (CoordinateSystem, grid, relativeTo, relativeToGrid)
 import Web.Event.Event (Event, preventDefault)
 import Web.HTML (Window)
 import Web.UIEvent.KeyboardEvent as KE
@@ -82,8 +83,7 @@ instance showMyADT :: Show MouseEventType where
 -- | You pattern-match on this event in the `onMouse` handler.
 data MouseEvent = MouseEvent
   { type :: MouseEventType
-  , x :: Int
-  , y :: Int
+  , gridCoords :: CoordinateSystem { x :: Number, y :: Number }
   , control :: Boolean
   , meta :: Boolean
   , alt :: Boolean
@@ -104,11 +104,14 @@ mouseEventFromDOM
   -> MouseEventType
   -> ME.MouseEvent
   -> MouseEvent
+
 mouseEventFromDOM { tileSize, width, height } eventType event =
   MouseEvent
     { type: eventType
-    , x: clip (offsetX event / tileSize) (height - 1)
-    , y: clip (offsetY event / tileSize) (width - 1)
+    , gridCoords:
+        { x: clip (offsetX event / tileSize) (height - 1)
+        , y: clip (offsetY event / tileSize) (width - 1)
+        } `relativeTo` grid
     , control: ME.ctrlKey event
     , alt: ME.altKey event
     , meta: ME.metaKey event
