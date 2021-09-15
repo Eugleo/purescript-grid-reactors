@@ -74,7 +74,7 @@ component { init, draw, onKey, onMouse, onTick } { title, width, height } =
       , lastTick: 0.0
       , lastGrid: Nothing
       }
-    { cellSize } /\ propsId <- Hooks.useState
+    { tileSize } /\ propsId <- Hooks.useState
       { title
       , draw
       , onKey
@@ -82,7 +82,7 @@ component { init, draw, onKey, onMouse, onTick } { title, width, height } =
       , onTick
       , width
       , height
-      , cellSize: 30
+      , tileSize: 30
       }
 
     Hooks.useLifecycleEffect $
@@ -105,16 +105,16 @@ component { init, draw, onKey, onMouse, onTick } { title, width, height } =
 
     Hooks.pure
       $ HH.div
-        [ HP.classes [ H.ClassName "m-auto p-16" ] ]
-        [ HH.h1 [ HP.classes [ H.ClassName "text-3xl font-bold mb-8" ] ] [ HH.text title ]
-        , HH.canvas
-            [ HP.classes
-                [ H.ClassName "rounded-lg bg-gray-100" ]
-            , HP.id_ canvasId
-            , HP.width $ width * cellSize
-            , HP.height $ height * cellSize
-            ]
-        ]
+          [ HP.classes [ H.ClassName "m-auto p-16" ] ]
+          [ HH.h1 [ HP.classes [ H.ClassName "text-3xl font-bold mb-8" ] ] [ HH.text title ]
+          , HH.canvas
+              [ HP.classes
+                  [ H.ClassName "rounded-lg bg-gray-100" ]
+              , HP.id_ canvasId
+              , HP.width $ width * tileSize
+              , HP.height $ height * tileSize
+              ]
+          ]
   where
   setupRedrawEvents internalId = do
     { emitter, listener } <- liftEffect create
@@ -162,7 +162,7 @@ handleMouse
   -> ME.MouseEvent
   -> HookM m Unit
 handleMouse stateId propsId getEventType event = do
-  { onMouse, height, width, cellSize } <- Hooks.get propsId
+  { onMouse, height, width, tileSize } <- Hooks.get propsId
   { mouseButtonPressed } <- Hooks.get stateId
   let eventType = getEventType mouseButtonPressed
   when (eventType == ButtonDown) $
@@ -170,8 +170,8 @@ handleMouse stateId propsId getEventType event = do
   when (eventType == ButtonUp) $
     Hooks.modify_ stateId \s -> s { mouseButtonPressed = false }
   defaultBehavior <-
-    evalAction { height, width, cellSize } stateId
-      (onMouse (mouseEventFromDOM { height, width, cellSize } eventType event))
+    evalAction { height, width, tileSize } stateId
+      (onMouse (mouseEventFromDOM { height, width, tileSize } eventType event))
   optionallyPreventDefault defaultBehavior (ME.toEvent event)
   requestGridRerender stateId propsId
 
@@ -184,9 +184,9 @@ handleKey
   -> HookM m Unit
 handleKey stateId propsId event = do
   { onKey } <- Hooks.get propsId
-  { height, width, cellSize } <- Hooks.get propsId
+  { height, width, tileSize } <- Hooks.get propsId
   defaultBehavior <-
-    evalAction { height, width, cellSize } stateId $
+    evalAction { height, width, tileSize } stateId $
       onKey (keypressEventFromDOM event)
   optionallyPreventDefault defaultBehavior (KE.toEvent event)
   requestGridRerender stateId propsId
@@ -207,8 +207,8 @@ handleTick stateId propsId listener =
     now <- liftEffect $ windowPerformanceNow window
     Hooks.modify_ stateId \s -> s { lastTick = now }
     when (not world.paused) $ do
-      { height, width, cellSize } <- Hooks.get propsId
-      evalAction { height, width, cellSize } stateId $
+      { height, width, tileSize } <- Hooks.get propsId
+      evalAction { height, width, tileSize } stateId $
         onTick (TickEvent { delta: (now - lastTick) / 1000.0 })
       liftEffect $ renderGrid stateId propsId listener
     _ <- liftEffect $
@@ -242,17 +242,17 @@ renderGrid
 renderGrid stateId propsId listener = do
   notify listener do
     { context, lastGrid, world } <- Hooks.get stateId
-    { width, height, cellSize, draw } <- Hooks.get propsId
+    { width, height, tileSize, draw } <- Hooks.get propsId
     withJust context \ctx -> do
-      let grid = renderDrawing (toNumber cellSize) { width, height } $ draw world
+      let grid = renderDrawing (toNumber tileSize) { width, height } $ draw world
       case lastGrid of
-        Nothing -> for_ (Grid.enumerate grid) $ renderCell ctx cellSize
+        Nothing -> for_ (Grid.enumerate grid) $ renderCell ctx tileSize
         Just reference ->
-          for_ (grid `differencesFrom` reference) $ renderCell ctx cellSize
+          for_ (grid `differencesFrom` reference) $ renderCell ctx tileSize
       Hooks.modify_ stateId \s -> s { lastGrid = Just grid }
   where
-  renderCell context size (Tuple { x, y } cell) =
-    case cell of
+  renderCell context size (Tuple { x, y } tile) =
+    case tile of
       EmptyCell -> liftEffect $ Canvas.launchCanvasAff_ context do
         Canvas.clearRect
           { height: toNumber size

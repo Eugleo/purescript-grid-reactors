@@ -40,7 +40,7 @@ import Reactor.Action
   )
 import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
 import Reactor.Graphics.CoordinateSystem (CoordinateSystem, canvas, grid, withCoords, wrt)
-import Reactor.Graphics.Drawing (fill, cell)
+import Reactor.Graphics.Drawing (fill, tile)
 import Reactor.Page (component) as Reactor.Page
 import Reactor.Types (Reactor, Configuration)
 

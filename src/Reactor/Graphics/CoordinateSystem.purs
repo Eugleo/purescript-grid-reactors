@@ -1,6 +1,6 @@
 -- | This module provies a wrapper that signalizes whether the wrapped
 -- | contents (usually points in space) should be taken relative to the rendering canvas
--- | (i.e. they are in 'pts') or relative to the grid (i.e. they are in 'cells').
+-- | (i.e. they are in 'pts') or relative to the grid (i.e. they are in 'tiles').
 
 module Reactor.Graphics.CoordinateSystem
   ( CoordinateSystem(..)
@@ -24,6 +24,7 @@ import Heterogeneous.Mapping (class HMap, hmap)
 type Point = { x :: Number, y :: Number }
 
 data CoordinateSystem a = RelativeToGrid a | RelativeToCanvas a
+
 derive instance functorCoordinateSystem :: Functor CoordinateSystem
 
 -- | Unwrap the wrapped thing and pass it to a function.
@@ -72,4 +73,4 @@ relativeToGrid
   -> CoordinateSystem a
   -> b
 relativeToGrid _ (RelativeToGrid x) = hmap (\n -> floor n) x
-relativeToGrid cellSize (RelativeToCanvas x) = hmap (\n -> floor (n / cellSize)) x
+relativeToGrid tileSize (RelativeToCanvas x) = hmap (\n -> floor (n / tileSize)) x

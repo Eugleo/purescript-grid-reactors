@@ -26,7 +26,7 @@ import Reactor.Graphics.CoordinateSystem (CoordinateSystem, Point)
 type Utilities =
   { width :: Int
   , height :: Int
-  , cellSize :: Int
+  , tileSize :: Int
   , bound :: CoordinateSystem Point -> CoordinateSystem Point
   }
 
@@ -66,7 +66,7 @@ instance monadRecAction :: MonadRec (Action m world) where
 -- | the given point in the grid or the canvas, meaning the point won't be beyond
 -- | the bounds of its coordinate system.
 -- | - `height :: Int`, `width :: Int`, the dimensions of the grid
--- | - `cellSize :: Int` the size of one grid cell, in points. The size is set internally,
+-- | - `tileSize :: Int` the size of one grid tile, in points. The size is set internally,
 -- | and this is the only way to its value.
 utilities :: forall world m. Action m world Utilities
 utilities = Action $ liftF $ Utilities identity

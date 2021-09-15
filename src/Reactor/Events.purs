@@ -75,7 +75,7 @@ instance showMyADT :: Show MouseEventType where
 -- | Explanation of each of the fields:
 -- | - `type` is the type of the event (drag, button up, etc.)
 -- | - `x` and `y` are the coordinates of the event. They are relative to the rendering grid,
--- | and denote the _cell_ where the event hapened.
+-- | and denote the _tile_ where the event hapened.
 -- | - `control`, `meta`, `shift`, and `alt` denote whether any modifier keys were pressed when the event happened
 -- | - `button` is an identifier of the button that has been pressed during the event, if applicable.
 -- | See this [entry in MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button) for more details.
@@ -100,15 +100,15 @@ foreign import offsetY :: ME.MouseEvent -> Int
 
 -- | Convert a DOM mouse event into our custom event. Used internally, you shouldn't need it.
 mouseEventFromDOM
-  :: { cellSize :: Int, width :: Int, height :: Int }
+  :: { tileSize :: Int, width :: Int, height :: Int }
   -> MouseEventType
   -> ME.MouseEvent
   -> MouseEvent
-mouseEventFromDOM { cellSize, width, height } eventType event =
+mouseEventFromDOM { tileSize, width, height } eventType event =
   MouseEvent
     { type: eventType
-    , x: clip (offsetX event / cellSize) (height - 1)
-    , y: clip (offsetY event / cellSize) (width - 1)
+    , x: clip (offsetX event / tileSize) (height - 1)
+    , y: clip (offsetY event / tileSize) (width - 1)
     , control: ME.ctrlKey event
     , alt: ME.altKey event
     , meta: ME.metaKey event

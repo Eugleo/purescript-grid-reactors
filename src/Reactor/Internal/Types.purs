@@ -13,13 +13,14 @@ import Reactor.Graphics.Drawing (Drawing)
 import Color (Color)
 
 data Cell = Colored Color | EmptyCell
+
 derive instance eqCell :: Eq Cell
 
 type Properties m world =
   { title :: String
   , width :: Int
   , height :: Int
-  , cellSize :: Int
+  , tileSize :: Int
   , draw :: world -> Drawing
   , onTick :: TickEvent -> Action m world Unit
   , onKey :: KeypressEvent -> Action m world DefaultBehavior

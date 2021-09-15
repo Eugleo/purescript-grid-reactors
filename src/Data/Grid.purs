@@ -69,9 +69,9 @@ differencesFrom
   => Grid a
   -> Grid a
   -> Array (Tuple { x :: Int, y :: Int } a)
-differencesFrom (Grid cells cfg@{ width }) (Grid cellsReference cfgReference)
-  | cfg /= cfgReference = enumerate2D width cells
+differencesFrom (Grid tiles cfg@{ width }) (Grid tilesReference cfgReference)
+  | cfg /= cfgReference = enumerate2D width tiles
   | otherwise = map (\(Tuple i (x /\ _)) -> Tuple i x)
       $ Array.filter (\((Tuple _ (x /\ y))) -> x /= y)
       $ enumerate2D width
-      $ (Array.zipWith Tuple cells cellsReference)
+      $ (Array.zipWith Tuple tiles tilesReference)

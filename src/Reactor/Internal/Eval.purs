@@ -24,11 +24,11 @@ import Type.Proxy (Proxy(..))
 evalAction
   :: forall world m a
    . MonadEffect m
-  => { width :: Int, cellSize :: Int, height :: Int }
+  => { width :: Int, tileSize :: Int, height :: Int }
   -> StateId (State m world)
   -> Reactor.Action m world a
   -> HookM m a
-evalAction { width, cellSize, height } stateId (Reactor.Action action) =
+evalAction { width, tileSize, height } stateId (Reactor.Action action) =
   foldFree (go (Proxy :: Proxy world)) action
 
   where
@@ -48,19 +48,20 @@ evalAction { width, cellSize, height } stateId (Reactor.Action action) =
     let
       w = toNumber width
       h = toNumber height
-      cs = toNumber cellSize
+      cs = toNumber tileSize
       clip n b = max (min n b) 0.0
+
       bound :: CoordinateSystem Point -> CoordinateSystem Point
       bound = case _ of
         RelativeToCanvas { x, y } ->
           RelativeToCanvas { x: clip x (cs * w - 0.01), y: clip y (cs * h - 0.01) }
         RelativeToGrid { x, y } ->
           RelativeToGrid { x: clip x (w - 1.0), y: clip y (h - 1.0) }
-    pure $ cc { width, cellSize, height, bound }
+    pure $ cc { width, tileSize, height, bound }
   go _ (Lift ma) = lift ma
 
 renderDrawing :: Number -> { width :: Int, height :: Int } -> Drawing -> Grid Cell
-renderDrawing cellSize g (DrawingM drawing) = Grid array g
+renderDrawing tileSize g (DrawingM drawing) = Grid array g
   where
   array = STArray.run do
     grid <- STArray.new
@@ -73,8 +74,8 @@ renderDrawing cellSize g (DrawingM drawing) = Grid array g
     case shape of
       Rectangle origin size -> do
         let
-          { x, y } = relativeToGrid cellSize origin
-          { width, height } = relativeToGrid cellSize size
+          { x, y } = relativeToGrid tileSize origin
+          { width, height } = relativeToGrid tileSize size
 
         for x (x + width) \i ->
           for y (y + height) \j ->

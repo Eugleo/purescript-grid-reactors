@@ -43,7 +43,7 @@ import Reactor.Graphics.Drawing (Drawing)
 -- | import Reactor.Graphics.Colors as Color
 -- | import Reactor.Graphics.CoordinateSystem
 -- |   (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, wrt)
--- | import Reactor.Graphics.Drawing (fill, cell)
+-- | import Reactor.Graphics.Drawing (fill, tile)
 -- | import Reactor.Types (Reactor)
 -- |
 -- | type World =
@@ -54,7 +54,7 @@ import Reactor.Graphics.Drawing (Drawing)
 -- | reactor :: forall m. Reactor m World
 -- | reactor =
 -- |   { init: { player: { x: 0, y: 0 } `wrt` grid, paused: true }
--- |   , draw: \{ player } -> fill Color.blue400 $ cell player
+-- |   , draw: \{ player } -> fill Color.blue400 $ tile player
 -- |   , onTick: \_ -> pure unit
 -- |   , onKey: \(KeypressEvent key _) -> do
 -- |       { bound } <- utilities
@@ -91,9 +91,9 @@ type Reactor m world =
 -- | is a general structure, our reactors focus on grid-based games and simulations.
 -- | The component thus needs a little more info than just what is in already the reactor, namely:
 -- | - `title`, the title of the webpage where the reactor is rendered
--- | - `width`, the width of the grid, in cells
--- | - `height` the height of the grid, in cells
--- | Notably, the size of the rendered cells isn't customizable and is set to 30pts.
+-- | - `width`, the width of the grid, in tiles
+-- | - `height` the height of the grid, in tiles
+-- | Notably, the size of the rendered tiles isn't customizable and is set to 30pts.
 type Configuration =
   { title :: String
   , width :: Int

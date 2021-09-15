@@ -19,7 +19,7 @@ import Reactor.Events (KeypressEvent(..))
 import Reactor.Graphics.Colors as Color
 import Reactor.Graphics.CoordinateSystem
   (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, wrt)
-import Reactor.Graphics.Drawing (fill, cell)
+import Reactor.Graphics.Drawing (fill, tile)
 import Reactor.Types (Reactor)
 
 type World =
@@ -30,7 +30,7 @@ type World =
 reactor :: forall m. Reactor m World
 reactor =
   { init: { dot: { x: 0, y: 0 } `wrt` grid, paused: true }
-  , draw: \{ dot } -> fill Color.blue400 $ cell dot
+  , draw: \{ dot } -> fill Color.blue400 $ tile dot
   , onTick: \_ -> pure unit
   , onKey: \(KeypressEvent key _) -> do
       { bound } <- utilities
@@ -56,4 +56,4 @@ reactor =
   }
 ```
 
-We ignore the mouse events, and we pause the clock — the only way the state changes is through the `onKey` event handler. In the `draw` function, given a position of a dot, we fill a blue cell on the grid in the same place.
+We ignore the mouse events, and we pause the clock — the only way the state changes is through the `onKey` event handler. In the `draw` function, given a position of a dot, we fill a blue tile on the grid in the same place.
