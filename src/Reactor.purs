@@ -34,7 +34,6 @@ import Reactor.Action
   ( executeDefaultBehavior
   , get
   , modify_
-  , preventDefaultBehavior
   , togglePause
   , utilities
   )

@@ -18,26 +18,28 @@ import Data.Show.Generic (genericShow)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem, grid, relativeTo, relativeToGrid)
+import Reactor.Graphics.CoordinateSystem (CoordinateSystem, grid, relativeTo)
 import Web.Event.Event (Event, preventDefault)
 import Web.HTML (Window)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.MouseEvent as ME
 
--- | This datatype is returned from your event handlers to signal to the reactor whether you want to prevent the
+-- | This datatype is used internally to signal to the reactor whether you want to prevent the
 -- | default behavior that would normally happen as a response to the event.
 -- |
 -- | In more detail: Some events have default behaviors associated with them; for example, pressing Ctrl+F
 -- | shows the find on the page dialog for the current page. When handling events, we often want to
 -- | 'consume' them, and _prevent_ the default behavior from happening — maybe Ctrl+F is used
 -- | for the 'fire' command in your game, and you don't want the find on the page dialog to show.
--- | You pattern-match on this event in the `onTick` handler.
+-- |
+-- | The default behavior is prevented automatically in your event handlers (`onKey`, `onMouse`).
+-- | If you want to execture the default behavior for certain events, you have to explicitly call
+-- | Reactor.Action.executeDefaultBehavior.
 data DefaultBehavior = Prevent | Execute
 
 derive instance eqDefaultBehavior :: Eq DefaultBehavior
 
--- | Used internally. You'll be better off using the `preventDefaultBehavior` and `executeDefaultBehavior`
--- | from `Reactor.Action`.
+-- | Used internally.
 optionallyPreventDefault
   :: forall m. MonadEffect m => DefaultBehavior -> Event -> HookM m Unit
 optionallyPreventDefault behavior =

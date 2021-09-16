@@ -9,7 +9,6 @@ module Reactor.Action
   , pause
   , unpause
   , togglePause
-  , preventDefaultBehavior
   , executeDefaultBehavior
   , ActionF(..)
   , Utilities
@@ -38,6 +37,7 @@ data ActionF m world a
   | Lift (m a)
   | Modify (world -> world) (world -> a)
   | Utilities (Utilities -> a)
+  | ExecuteDefaultBehavior a
 
 derive instance functorActionF :: Functor m => Functor (ActionF m world)
 
@@ -121,20 +121,10 @@ unpause = modify_ \w -> w { paused = false }
 togglePause :: forall world m. Action m { paused :: Boolean | world } Unit
 togglePause = modify_ \w -> w { paused = not w.paused }
 
--- | Prevent the execution of the default behavior associated with the event.
--- | You can read more in the documentation of `Reactor.Events`.
--- |
--- | Usually, this or `executeDefaultBehavior` is the last thing you'll call in
--- | your `onMouse` and `onKey` handlers. This one will usually get called in
--- | the events you handle (i.e. that have some functionality associated with them in your game).
-preventDefaultBehavior
-  :: forall world m. Action m { paused :: Boolean | world } DefaultBehavior
-preventDefaultBehavior = Action $ liftF $ Modify identity (const Prevent)
-
 -- | After handling the event, execute the default behavior as well.
 -- | You can read more in the documentation of `Reactor.Events`.
 -- |
--- | Usually, this or `preventDefaultBehavior` is the last thing you'll call in
+-- | Usually, this is the last thing you'll call in
 -- | your `onMouse` and `onKey` handlers. This one will usually get called in
 -- | the events you only let pass through (i.e. when pressing 'J' doesn't 'do anything' in your game).
 executeDefaultBehavior

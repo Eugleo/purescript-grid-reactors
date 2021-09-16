@@ -14,7 +14,7 @@ If you thought we've skipped some details, you're wrong — that really was all 
 
 ```haskell
 import Reactor.Action
-  (executeDefaultBehavior, modify_, preventDefaultBehavior, utilities)
+  (executeDefaultBehavior, modify_, utilities)
 import Reactor.Events (KeypressEvent(..))
 import Reactor.Graphics.Colors as Color
 import Reactor.Graphics.CoordinateSystem
@@ -38,19 +38,15 @@ reactor =
         "ArrowLeft" -> do
           modify_ \w@{ player } ->
             w { player = bound $ moveLeft player }
-          preventDefaultBehavior
         "ArrowRight" -> do
           modify_ \w@{ player } ->
             w { player = bound $ moveRight player }
-          preventDefaultBehavior
         "ArrowDown" -> do
           modify_ \w@{ player } ->
             w { player = bound $ moveDown player }
-          preventDefaultBehavior
         "ArrowUp" -> do
           modify_ \w@{ player } ->
             w { player = bound $ moveUp player }
-          preventDefaultBehavior
         _ -> executeDefaultBehavior
     , onMouse: \_ -> executeDefaultBehavior
   }

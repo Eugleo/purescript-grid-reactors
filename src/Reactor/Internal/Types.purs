@@ -8,7 +8,7 @@ import Graphics.CanvasAction (Context2D)
 import Halogen.Hooks (HookM)
 import Halogen.Subscription (Listener)
 import Reactor.Action (Action)
-import Reactor.Events (KeypressEvent, MouseEvent, TickEvent, DefaultBehavior)
+import Reactor.Events (KeypressEvent, MouseEvent, TickEvent)
 import Reactor.Graphics.Drawing (Drawing)
 import Color (Color)
 
@@ -23,8 +23,8 @@ type Properties m world =
   , tileSize :: Int
   , draw :: world -> Drawing
   , onTick :: TickEvent -> Action m world Unit
-  , onKey :: KeypressEvent -> Action m world DefaultBehavior
-  , onMouse :: MouseEvent -> Action m world DefaultBehavior
+  , onKey :: KeypressEvent -> Action m world Unit
+  , onMouse :: MouseEvent -> Action m world Unit
   }
 
 type State m world =

@@ -208,7 +208,7 @@ handleTick stateId propsId listener =
     Hooks.modify_ stateId \s -> s { lastTick = now }
     when (not world.paused) $ do
       { height, width, tileSize } <- Hooks.get propsId
-      evalAction { height, width, tileSize } stateId $
+      _ <- evalAction { height, width, tileSize } stateId $
         onTick (TickEvent { delta: (now - lastTick) / 1000.0 })
       liftEffect $ renderGrid stateId propsId listener
     _ <- liftEffect $

@@ -11,7 +11,7 @@ module Reactor.Types (Reactor, Configuration) where
 
 import Data.Unit (Unit)
 import Reactor.Action (Action)
-import Reactor.Events (KeypressEvent, MouseEvent, TickEvent, DefaultBehavior)
+import Reactor.Events (KeypressEvent, MouseEvent, TickEvent)
 import Reactor.Graphics.Drawing (Drawing)
 
 -- | The reactor is a simple record. A reactor is is parametrized over the following type variables:
@@ -38,7 +38,7 @@ import Reactor.Graphics.Drawing (Drawing)
 -- | and mouse events are ignored.
 -- | ```haskell
 -- | import Reactor.Action
--- |   (executeDefaultBehavior, modify_, preventDefaultBehavior, utilities)
+-- |   (executeDefaultBehavior, modify_, utilities)
 -- | import Reactor.Events (KeypressEvent(..))
 -- | import Reactor.Graphics.Colors as Color
 -- | import Reactor.Graphics.CoordinateSystem
@@ -62,19 +62,15 @@ import Reactor.Graphics.Drawing (Drawing)
 -- |         "ArrowLeft" -> do
 -- |           modify_ \w@{ player } ->
 -- |             w { player = bound $ moveLeft player }
--- |           preventDefaultBehavior
 -- |         "ArrowRight" -> do
 -- |           modify_ \w@{ player } ->
 -- |             w { player = bound $ moveRight player }
--- |           preventDefaultBehavior
 -- |         "ArrowDown" -> do
 -- |           modify_ \w@{ player } ->
 -- |             w { player = bound $ moveDown player }
--- |           preventDefaultBehavior
 -- |         "ArrowUp" -> do
 -- |           modify_ \w@{ player } ->
 -- |             w { player = bound $ moveUp player }
--- |           preventDefaultBehavior
 -- |         _ -> executeDefaultBehavior
 -- |   , onMouse: \_ -> executeDefaultBehavior
 -- |   }
@@ -83,8 +79,8 @@ type Reactor m world =
   { init :: world
   , draw :: world -> Drawing
   , onTick :: TickEvent -> Action m world Unit
-  , onKey :: KeypressEvent -> Action m world DefaultBehavior
-  , onMouse :: MouseEvent -> Action m world DefaultBehavior
+  , onKey :: KeypressEvent -> Action m world Unit
+  , onMouse :: MouseEvent -> Action m world Unit
   }
 
 -- | Configuration for the Halogen component that renders the reactor. Although a reactor
