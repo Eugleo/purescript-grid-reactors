@@ -37,7 +37,7 @@ import Reactor.Action
   , togglePause
   , utilities
   )
-import Reactor.Events (KeypressEvent(..), MouseEvent(..), TickEvent(..))
+import Reactor.Events (Event(..))
 import Reactor.Graphics.CoordinateSystem
   ( CoordinateSystem
   , canvas

@@ -30,8 +30,8 @@ import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
 import Reactor.Events
-  ( MouseEventType(..)
-  , TickEvent(..)
+  ( Event(..)
+  , MouseEventType(..)
   , keypressEventFromDOM
   , mouseEventFromDOM
   , optionallyPreventDefault
@@ -64,7 +64,7 @@ component
   => Reactor m { paused :: Boolean | world }
   -> Configuration
   -> H.Component q i o m
-component { init, draw, onKey, onMouse, onTick } { title, width, height } =
+component { init, draw, handleEvent } { title, width, height } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ stateId <- Hooks.useState
       { context: Nothing
@@ -75,15 +75,7 @@ component { init, draw, onKey, onMouse, onTick } { title, width, height } =
       , lastGrid: Nothing
       }
     { tileSize } /\ propsId <- Hooks.useState
-      { title
-      , draw
-      , onKey
-      , onMouse
-      , onTick
-      , width
-      , height
-      , tileSize: 30
-      }
+      { title, draw, handleEvent, width, height, tileSize: 30 }
 
     Hooks.useLifecycleEffect $
       (Canvas.getCanvasElementById canvasId) >>= case _ of
@@ -162,7 +154,7 @@ handleMouse
   -> ME.MouseEvent
   -> HookM m Unit
 handleMouse stateId propsId getEventType event = do
-  { onMouse, height, width, tileSize } <- Hooks.get propsId
+  { handleEvent, height, width, tileSize } <- Hooks.get propsId
   { mouseButtonPressed } <- Hooks.get stateId
   let eventType = getEventType mouseButtonPressed
   when (eventType == ButtonDown) $
@@ -171,7 +163,7 @@ handleMouse stateId propsId getEventType event = do
     Hooks.modify_ stateId \s -> s { mouseButtonPressed = false }
   defaultBehavior <-
     evalAction { height, width, tileSize } stateId
-      (onMouse (mouseEventFromDOM { height, width, tileSize } eventType event))
+      (handleEvent (mouseEventFromDOM { height, width, tileSize } eventType event))
   optionallyPreventDefault defaultBehavior (ME.toEvent event)
   requestGridRerender stateId propsId
 
@@ -183,11 +175,11 @@ handleKey
   -> KE.KeyboardEvent
   -> HookM m Unit
 handleKey stateId propsId event = do
-  { onKey } <- Hooks.get propsId
+  { handleEvent } <- Hooks.get propsId
   { height, width, tileSize } <- Hooks.get propsId
   defaultBehavior <-
     evalAction { height, width, tileSize } stateId $
-      onKey (keypressEventFromDOM event)
+      handleEvent (keypressEventFromDOM event)
   optionallyPreventDefault defaultBehavior (KE.toEvent event)
   requestGridRerender stateId propsId
 
@@ -202,14 +194,14 @@ handleTick
 handleTick stateId propsId listener =
   notify listener do
     { lastTick, world } <- Hooks.get stateId
-    { onTick } <- Hooks.get propsId
+    { handleEvent } <- Hooks.get propsId
     window <- liftEffect Web.window
     now <- liftEffect $ windowPerformanceNow window
     Hooks.modify_ stateId \s -> s { lastTick = now }
     when (not world.paused) $ do
       { height, width, tileSize } <- Hooks.get propsId
       _ <- evalAction { height, width, tileSize } stateId $
-        onTick (TickEvent { delta: (now - lastTick) / 1000.0 })
+        handleEvent (TickEvent { delta: (now - lastTick) / 1000.0 })
       liftEffect $ renderGrid stateId propsId listener
     _ <- liftEffect $
       Web.requestAnimationFrame

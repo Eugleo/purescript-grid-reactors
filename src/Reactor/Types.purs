@@ -11,7 +11,7 @@ module Reactor.Types (Reactor, Configuration) where
 
 import Data.Unit (Unit)
 import Reactor.Action (Action)
-import Reactor.Events (KeypressEvent, MouseEvent, TickEvent)
+import Reactor.Events (Event)
 import Reactor.Graphics.Drawing (Drawing)
 
 -- | The reactor is a simple record. A reactor is is parametrized over the following type variables:
@@ -78,9 +78,7 @@ import Reactor.Graphics.Drawing (Drawing)
 type Reactor m world =
   { init :: world
   , draw :: world -> Drawing
-  , onTick :: TickEvent -> Action m world Unit
-  , onKey :: KeypressEvent -> Action m world Unit
-  , onMouse :: MouseEvent -> Action m world Unit
+  , handleEvent :: Event -> Action m world Unit
   }
 
 -- | Configuration for the Halogen component that renders the reactor. Although a reactor

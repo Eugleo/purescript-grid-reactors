@@ -3,11 +3,9 @@ module Reactor.Events
   ( optionallyPreventDefault
   , DefaultBehavior(..)
   , mouseEventFromDOM
-  , MouseEvent(..)
   , MouseEventType(..)
   , keypressEventFromDOM
-  , KeypressEvent(..)
-  , TickEvent(..)
+  , Event(..)
   , windowPerformanceNow
   ) where
 
@@ -19,7 +17,7 @@ import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
 import Reactor.Graphics.CoordinateSystem (CoordinateSystem, grid, relativeTo)
-import Web.Event.Event (Event, preventDefault)
+import Web.Event.Event (Event, preventDefault) as Web
 import Web.HTML (Window)
 import Web.UIEvent.KeyboardEvent as KE
 import Web.UIEvent.MouseEvent as ME
@@ -41,22 +39,11 @@ derive instance eqDefaultBehavior :: Eq DefaultBehavior
 
 -- | Used internally.
 optionallyPreventDefault
-  :: forall m. MonadEffect m => DefaultBehavior -> Event -> HookM m Unit
+  :: forall m. MonadEffect m => DefaultBehavior -> Web.Event -> HookM m Unit
 optionallyPreventDefault behavior =
   when (behavior == Prevent)
     <<< liftEffect
-    <<< preventDefault
-
--- | This event is fired on every clock-tick in the reactor.
--- | The attribute `delta` is the time from the last tick, in seconds.
--- |
--- | There's approximately 60 ticks per second, however, the number _can_ vary depending on the browser's current available resources.
--- | For the smoothest motion, you should calculate the traveled distance based on the
--- | speed of the entity and the `delta`.
-newtype TickEvent =
-  TickEvent { delta :: Number }
-
-foreign import windowPerformanceNow :: Window -> Effect Number
+    <<< Web.preventDefault
 
 -- | The main mouse event types, from the point of view of the rendered grid.
 -- | A `Drag` occurs when the mouse button is down during a `Move`.
@@ -69,11 +56,17 @@ data MouseEventType
   | Leave
   | Move
 
-derive instance eqMouseEventType :: Eq MouseEventType
-derive instance genericMouseEventType :: Generic MouseEventType _
-instance showMyADT :: Show MouseEventType where
-  show = genericShow
-
+-- | This types describes the different events that occur during the life of a reactor. You
+-- | pattern match on this in the `handleEvent` function.
+-- |
+-- | ## Tick Event
+-- | This event is fired on every clock-tick in the reactor.
+-- | The attribute `delta` is the time from the last tick, in seconds.
+-- | There's approximately 60 ticks per second, however, the number _can_ vary depending on the browser's current available resources.
+-- | For the smoothest motion, you should calculate the traveled distance based on the
+-- | speed of the entity and the `delta`.
+-- |
+-- | ## Mouse Event
 -- | This event is fired whenever the user presses a button on their mouse, or moves the mouse over the rendering grid.
 -- | Explanation of each of the fields:
 -- | - `type` is the type of the event (drag, button up, etc.)
@@ -82,31 +75,55 @@ instance showMyADT :: Show MouseEventType where
 -- | - `control`, `meta`, `shift`, and `alt` denote whether any modifier keys were pressed when the event happened
 -- | - `button` is an identifier of the button that has been pressed during the event, if applicable.
 -- | See this [entry in MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button) for more details.
--- | You pattern-match on this event in the `onMouse` handler.
-data MouseEvent = MouseEvent
-  { type :: MouseEventType
-  , gridCoords :: CoordinateSystem { x :: Number, y :: Number }
-  , control :: Boolean
-  , meta :: Boolean
-  , alt :: Boolean
-  , shift :: Boolean
-  , button :: Int
-  }
+-- |
+-- | ## Keypress Event
+-- | This event is fired whenever the user presses down a key on the keyboard.
+-- | The key is passed in the event as a `String`, with the following rules:
+-- | - Numbers, letters, and symbols all have intuitive codes (type A → get "A", type ů → get "ů").
+-- | Notably, pressing space produces an event with a literal space, `" "`.
+-- | - Any modifier keys that were pressed simultaneously with the main key are passed in the record
+-- | `{ shift, control, alt, meta }`. A `meta` key is the Windows button on Windows, and the Command button on the Mac.
+-- | - Common special keys have intuitive names. For example: `ArrowLeft`, `ArrowRight`, `ArrowUp`,
+-- | `ArrowDown`. Full list can be seen on [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
 
-derive instance genericMouseEvent :: Generic MouseEvent _
-instance showMouseEvent :: Show MouseEvent where
+data Event
+  = TickEvent { delta :: Number }
+  | MouseEvent
+      { type :: MouseEventType
+      , gridCoords :: CoordinateSystem { x :: Number, y :: Number }
+      , control :: Boolean
+      , meta :: Boolean
+      , alt :: Boolean
+      , shift :: Boolean
+      , button :: Int
+      }
+  | KeypressEvent String
+      { shift :: Boolean
+      , control :: Boolean
+      , alt :: Boolean
+      , meta :: Boolean
+      }
+
+foreign import windowPerformanceNow :: Window -> Effect Number
+
+derive instance genericEvent :: Generic Event _
+instance showEvent :: Show Event where
+  show = genericShow
+
+derive instance eqMouseEventType :: Eq MouseEventType
+derive instance genericMouseEventType :: Generic MouseEventType _
+instance showMyADT :: Show MouseEventType where
   show = genericShow
 
 foreign import offsetX :: ME.MouseEvent -> Int
 foreign import offsetY :: ME.MouseEvent -> Int
 
--- | Convert a DOM mouse event into our custom event. Used internally, you shouldn't need it.
+-- | Convert a DOM mouse event into our custom event type. Used internally, you shouldn't need it.
 mouseEventFromDOM
   :: { tileSize :: Int, width :: Int, height :: Int }
   -> MouseEventType
   -> ME.MouseEvent
-  -> MouseEvent
-
+  -> Event
 mouseEventFromDOM { tileSize, width, height } eventType event =
   MouseEvent
     { type: eventType
@@ -123,25 +140,8 @@ mouseEventFromDOM { tileSize, width, height } eventType event =
   where
   clip n b = max (min n b) 0
 
--- | This event is fired whenever the user presses down a key on the keyboard.
--- | The key is passed in the event as a `String`, with the following rules:
--- | - Numbers, letters, and symbols all have intuitive codes (type A → get "A", type ů → get "ů").
--- | Notably, pressing space produces an event with a literal space, `" "`.
--- | - Any modifier keys that were pressed simultaneously with the main key are passed in the record
--- | `{ shift, control, alt, meta }`. A `meta` key is the Windows button on Windows, and the Command button on the Mac.
--- | - Common special keys have intuitive names. For example: `ArrowLeft`, `ArrowRight`, `ArrowUp`,
--- | `ArrowDown`. Full list can be seen on [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
--- | You pattern-match on this event in the `onKey` handler.
-data KeypressEvent
-  = KeypressEvent String
-  { shift :: Boolean
-  , control :: Boolean
-  , alt :: Boolean
-  , meta :: Boolean
-  }
-
--- | Convert a DOM keyboard event into our custom event. Used internally, you shouldn't need it.
-keypressEventFromDOM :: KE.KeyboardEvent -> KeypressEvent
+-- | Convert a DOM keyboard event into our custom event type. Used internally, you shouldn't need it.
+keypressEventFromDOM :: KE.KeyboardEvent -> Event
 keypressEventFromDOM event =
   KeypressEvent (KE.key event)
     { shift: KE.shiftKey event
