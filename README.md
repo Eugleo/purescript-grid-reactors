@@ -29,27 +29,22 @@ type World =
 
 reactor :: forall m. Reactor m World
 reactor =
-  { init: { dot: { x: 0, y: 0 } `relativeTo` grid, paused: true }
-  , draw: \{ dot } -> fill Color.blue400 $ tile dot
-  , onTick: \_ -> pure unit
-  , onKey: \(KeypressEvent key _) -> do
+  { init: { player: { x: 0, y: 0 } `relativeTo` grid, paused: true }
+  , draw: \{ player } -> fill Color.blue400 $ tile player
+  , handleEvent: \event -> do
       { bound } <- utilities
-      case key of
-        "ArrowLeft" -> do
-          modify_ \w@{ player } ->
-            w { player = bound $ moveLeft player }
-        "ArrowRight" -> do
-          modify_ \w@{ player } ->
-            w { player = bound $ moveRight player }
-        "ArrowDown" -> do
-          modify_ \w@{ player } ->
-            w { player = bound $ moveDown player }
-        "ArrowUp" -> do
-          modify_ \w@{ player } ->
-            w { player = bound $ moveUp player }
+      case event of
+        KeypressEvent "ArrowLeft" _ ->
+          modify_ \w -> w { player = bound $ moveLeft w.player }
+        KeypressEvent "ArrowRight" _ ->
+          modify_ \w -> w { player = bound $ moveRight w.player }
+        KeypressEvent "ArrowDown" _ ->
+          modify_ \w -> w { player = bound $ moveDown w.player }
+        KeypressEvent "ArrowUp" _ ->
+          modify_ \w -> w { player = bound $ moveUp w.player }
+        KeypressEvent " " _ -> togglePause
         _ -> executeDefaultBehavior
-    , onMouse: \_ -> executeDefaultBehavior
   }
 ```
 
-We ignore the mouse events, and we pause the clock — the only way the state changes is through the `onKey` event handler. In the `draw` function, given a position of a dot, we fill a blue tile on the grid in the same place.
+We ignore the mouse events, and we pause the clock — the only way the state changes is through the keypress events. In the `draw` function, given a position of the player, we fill a blue tile on the grid in the same place.

@@ -30,7 +30,7 @@ import Web.UIEvent.MouseEvent as ME
 -- | 'consume' them, and _prevent_ the default behavior from happening — maybe Ctrl+F is used
 -- | for the 'fire' command in your game, and you don't want the find on the page dialog to show.
 -- |
--- | The default behavior is prevented automatically in your event handlers (`onKey`, `onMouse`).
+-- | The default behavior is prevented automatically in your event handler.
 -- | If you want to execture the default behavior for certain events, you have to explicitly call
 -- | Reactor.Action.executeDefaultBehavior.
 data DefaultBehavior = Prevent | Execute

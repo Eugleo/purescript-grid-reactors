@@ -24,14 +24,11 @@ import Reactor.Graphics.Drawing (Drawing)
 -- | The fields in the record are the following:
 -- | - `init` is the initial state of the reactor's world
 -- | - `draw` is a function used to render the world anytime it is changed
--- | - `onTick` is a function called on every tick of the reactor's clock.
--- | It is called around 60 times a second, provided the reactor is not paused.
--- | - `onKey` is an event handler for keyboard input events. It receives the pressed key
--- | and does some `Action`, which usually involves updating the world based on the received
--- | input.
--- | `onMouse` is an event handler for mouse input events (button clicks, draggging, moving).
--- | Similarly to the `onKey` function, it receives the details of the event
--- | and does some `Action`, which usually involves updating the world based on the event.
+-- | - `handleEvent` is a function for handling the three types of events: keypress events, mouse events, and tick events.
+-- | The events are handled by running the action returned by `handleEvent`.
+-- |   - Tick events are fired on every tick of the reactor's clock, around 60 times a second, provided the reactor is not paused.
+-- |   - Keypress events are fired when a key on a keyboard is pressed.
+-- |   - Mouse events are fired whenever a mouse is moved above the canvas (the drawing area of the reactor), when the canvas is clicked, or when the user drags something (i.e. clicks and then moves the mouse).
 -- |
 -- | For example, when ran, the following reactor would render a player at the initial position,
 -- | and would allow the user to move the player by pressing arrow keys. The clock is paused,
@@ -55,24 +52,19 @@ import Reactor.Graphics.Drawing (Drawing)
 -- | reactor =
 -- |   { init: { player: { x: 0, y: 0 } `relativeTo` grid, paused: true }
 -- |   , draw: \{ player } -> fill Color.blue400 $ tile player
--- |   , onTick: \_ -> pure unit
--- |   , onKey: \(KeypressEvent key _) -> do
+-- |   , handleEvent: \event -> do
 -- |       { bound } <- utilities
--- |       case key of
--- |         "ArrowLeft" -> do
--- |           modify_ \w@{ player } ->
--- |             w { player = bound $ moveLeft player }
--- |         "ArrowRight" -> do
--- |           modify_ \w@{ player } ->
--- |             w { player = bound $ moveRight player }
--- |         "ArrowDown" -> do
--- |           modify_ \w@{ player } ->
--- |             w { player = bound $ moveDown player }
--- |         "ArrowUp" -> do
--- |           modify_ \w@{ player } ->
--- |             w { player = bound $ moveUp player }
+-- |       case event of
+-- |         KeypressEvent "ArrowLeft" _ ->
+-- |           modify_ \w -> w { player = bound $ moveLeft w.player }
+-- |         KeypressEvent "ArrowRight" _ ->
+-- |           modify_ \w -> w { player = bound $ moveRight w.player }
+-- |         KeypressEvent "ArrowDown" _ ->
+-- |           modify_ \w -> w { player = bound $ moveDown w.player }
+-- |         KeypressEvent "ArrowUp" _ ->
+-- |           modify_ \w -> w { player = bound $ moveUp w.player }
+-- |         KeypressEvent " " _ -> togglePause
 -- |         _ -> executeDefaultBehavior
--- |   , onMouse: \_ -> executeDefaultBehavior
 -- |   }
 -- | ```
 type Reactor m world =

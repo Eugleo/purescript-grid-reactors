@@ -124,9 +124,8 @@ togglePause = modify_ \w -> w { paused = not w.paused }
 -- | After handling the event, execute the default behavior as well.
 -- | You can read more in the documentation of `Reactor.Events`.
 -- |
--- | Usually, this is the last thing you'll call in
--- | your `onMouse` and `onKey` handlers. This one will usually get called in
--- | the events you only let pass through (i.e. when pressing 'J' doesn't 'do anything' in your game).
+-- | Usually you'll call this in the `handleEvent` function, for events that you _don't_ want to handle,
+-- | e.g. when pressing 'J' doesn't 'do anything' in your game.
 executeDefaultBehavior
   :: forall world m. Action m { paused :: Boolean | world } Unit
 executeDefaultBehavior = Action $ liftF $ ExecuteDefaultBehavior unit
