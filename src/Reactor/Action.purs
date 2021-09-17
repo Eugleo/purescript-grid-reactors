@@ -37,7 +37,7 @@ data ActionF m world a
   | Lift (m a)
   | Modify (world -> world) (world -> a)
   | Utilities (Utilities -> a)
-  | ExecuteDefaultBehavior a
+  | ExecuteDefaultBehavior (a)
 
 derive instance functorActionF :: Functor m => Functor (ActionF m world)
 
@@ -128,5 +128,5 @@ togglePause = modify_ \w -> w { paused = not w.paused }
 -- | your `onMouse` and `onKey` handlers. This one will usually get called in
 -- | the events you only let pass through (i.e. when pressing 'J' doesn't 'do anything' in your game).
 executeDefaultBehavior
-  :: forall world m. Action m { paused :: Boolean | world } DefaultBehavior
-executeDefaultBehavior = Action $ liftF $ Modify identity (const Execute)
+  :: forall world m. Action m { paused :: Boolean | world } Unit
+executeDefaultBehavior = Action $ liftF $ ExecuteDefaultBehavior unit
