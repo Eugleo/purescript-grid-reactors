@@ -56,20 +56,40 @@ grid :: forall a b. HMap (Int -> Number) a b => a -> CoordinateSystem b
 grid = RelativeToGrid <<< hmap (\n -> toNumber n)
 
 -- | A simple helper functions that subtracts 1 from the `y` coordinate.
-moveUp :: CoordinateSystem Point -> CoordinateSystem Point
-moveUp = map (\{ x, y } -> { x, y: y - 1.0 })
+moveUp
+  :: forall cs a r
+   . Ring a
+  => Functor cs
+  => cs { x :: a, y :: a | r }
+  -> cs { x :: a, y :: a | r }
+moveUp = map \r@{ y } -> r { y = y - one }
 
 -- | A simple helper functions that adds 1 to the `y` coordinate.
-moveDown :: CoordinateSystem Point -> CoordinateSystem Point
-moveDown = map (\{ x, y } -> { x, y: y + 1.0 })
+moveDown
+  :: forall cs a r
+   . Ring a
+  => Functor cs
+  => cs { x :: a, y :: a | r }
+  -> cs { x :: a, y :: a | r }
+moveDown = map \r@{ y } -> r { y = y + one }
 
 -- | A simple helper functions that subtracts 1 from the `x` coordinate.
-moveLeft :: CoordinateSystem Point -> CoordinateSystem Point
-moveLeft = map (\{ x, y } -> { x: x - 1.0, y })
+moveLeft
+  :: forall cs a r
+   . Ring a
+  => Functor cs
+  => cs { x :: a, y :: a | r }
+  -> cs { x :: a, y :: a | r }
+moveLeft = map \r@{ x } -> r { x = x - one }
 
 -- | A simple helper functions that adds 1 to the `x` coordinate.
-moveRight :: CoordinateSystem Point -> CoordinateSystem Point
-moveRight = map (\{ x, y } -> { x: x + 1.0, y })
+moveRight
+  :: forall cs a r
+   . Ring a
+  => Functor cs
+  => cs { x :: a, y :: a | r }
+  -> cs { x :: a, y :: a | r }
+moveRight = map \r@{ x } -> r { x = x + one }
 
 -- | Mostly for internal use.
 relativeToGrid
