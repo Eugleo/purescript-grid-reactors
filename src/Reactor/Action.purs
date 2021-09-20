@@ -19,7 +19,6 @@ import Prelude
 import Control.Monad.Free (Free, liftF)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Effect.Class (class MonadEffect, liftEffect)
-import Reactor.Events (DefaultBehavior(..))
 import Reactor.Graphics.CoordinateSystem (CoordinateSystem, Point)
 
 type Utilities =
