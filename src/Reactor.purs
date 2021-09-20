@@ -52,11 +52,10 @@ import Reactor.Types (Reactor, Configuration)
 -- | Start a `Reactor` and render it asynchronously as a Halogen component with the given `Configuration`.
 -- | The reactor's world is required to have a field named `paused` that is used to decide
 -- | whether the reactor's clock should be running (`paused: false`) or not (`paused: true`).
-
 runReactor
   :: forall world
-   . Reactor Aff { paused :: Boolean | world } -- | The reactor that should be run
-  -> Configuration -- | The configuration for the Halogen component (title, width, height)
+   . Reactor Aff { paused :: Boolean | world }
+  -> Configuration
   -> Effect Unit
 runReactor reactor config =
   HA.runHalogenAff do
