@@ -1,0 +1,27 @@
+{
+  "name": "purescript-grid-reactors",
+  "version": "1.0.0",
+  "description": "Reactors are values enabling the creation of time-based animations, simulations, and interactive programs, as per [Pyret Documentation](https://www.pyret.org/docs/latest/reactors.html). This particular library brings the fun of reactors into Purescript, allowing you to create simple grid-based games in 3 steps:",
+  "main": "dev/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eugleo/purescript-grid-reactors.git"
+  },
+  "author": "Evžen Wybitul",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Eugleo/purescript-grid-reactors/issues"
+  },
+  "homepage": "https://github.com/Eugleo/purescript-grid-reactors#readme",
+  "devDependencies": {
+    "purescript": "^0.14.4",
+    "purs-tidy": "^0.5.2",
+    "spago": "^0.20.3"
+  }
+}
