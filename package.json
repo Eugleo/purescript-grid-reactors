@@ -22,6 +22,7 @@
   "devDependencies": {
     "purescript": "^0.14.4",
     "purs-tidy": "^0.5.2",
-    "spago": "^0.20.3"
+    "spago": "^0.20.3",
+    "ansi-regex": ">=5.0.1"
   }
 }
