@@ -163,7 +163,7 @@ handleMouse stateId propsId getEventType event = do
     Hooks.modify_ stateId \s -> s { mouseButtonPressed = false }
   defaultBehavior <-
     evalAction { height, width, tileSize } stateId
-      (handleEvent (mouseEventFromDOM { height, width, tileSize } eventType event))
+      (handleEvent (mouseEventFromDOM eventType event))
   optionallyPreventDefault defaultBehavior (ME.toEvent event)
   requestGridRerender stateId propsId
 
@@ -236,7 +236,7 @@ renderGrid stateId propsId listener = do
     { context, lastGrid, world } <- Hooks.get stateId
     { width, height, tileSize, draw } <- Hooks.get propsId
     withJust context \ctx -> do
-      let grid = renderDrawing (toNumber tileSize) { width, height } $ draw world
+      let grid = renderDrawing tileSize { width, height } $ draw world
       case lastGrid of
         Nothing -> for_ (Grid.enumerate grid) $ renderCell ctx tileSize
         Just reference ->

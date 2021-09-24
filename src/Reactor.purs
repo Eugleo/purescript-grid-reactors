@@ -39,10 +39,8 @@ import Reactor.Action
   )
 import Reactor.Events (Event(..))
 import Reactor.Graphics.CoordinateSystem
-  ( CoordinateSystem
-  , canvas
+  ( canvas
   , grid
-  , withCoords
   , relativeTo
   )
 import Reactor.Graphics.Drawing (fill, tile)

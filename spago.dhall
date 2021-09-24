@@ -17,6 +17,7 @@
   , "heterogeneous"
   , "integers"
   , "maybe"
+  , "newtype"
   , "partial"
   , "prelude"
   , "psci-support"

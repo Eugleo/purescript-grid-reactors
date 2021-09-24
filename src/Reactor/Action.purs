@@ -19,13 +19,14 @@ import Prelude
 import Control.Monad.Free (Free, liftF)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Effect.Class (class MonadEffect, liftEffect)
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem, Point)
+import Reactor.Graphics.CoordinateSystem (class ToGridCoords)
+import Reactor.Graphics.Drawing (Point)
 
 type Utilities =
   { width :: Int
   , height :: Int
   , tileSize :: Int
-  , bound :: CoordinateSystem Point -> CoordinateSystem Point
+  , bound :: forall coords. ToGridCoords coords => coords Point -> coords Point
   }
 
 -- | A DSL for constructing actions. Mostly for internal use.

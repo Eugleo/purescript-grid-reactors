@@ -12,11 +12,12 @@ module Reactor.Events
 import Prelude
 
 import Data.Generic.Rep (class Generic)
+import Data.Int (toNumber)
 import Data.Show.Generic (genericShow)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem, grid, relativeTo)
+import Reactor.Graphics.CoordinateSystem (RelativeToCanvas, canvas, relativeTo)
 import Web.Event.Event (Event, preventDefault) as Web
 import Web.HTML (Window)
 import Web.UIEvent.KeyboardEvent as KE
@@ -90,7 +91,7 @@ data Event
   = TickEvent { delta :: Number }
   | MouseEvent
       { type :: MouseEventType
-      , gridCoords :: CoordinateSystem { x :: Number, y :: Number }
+      , position :: RelativeToCanvas { x :: Number, y :: Number }
       , control :: Boolean
       , meta :: Boolean
       , alt :: Boolean
@@ -120,25 +121,20 @@ foreign import offsetY :: ME.MouseEvent -> Int
 
 -- | Convert a DOM mouse event into our custom event type. Used internally, you shouldn't need it.
 mouseEventFromDOM
-  :: { tileSize :: Int, width :: Int, height :: Int }
-  -> MouseEventType
+  :: MouseEventType
   -> ME.MouseEvent
   -> Event
-mouseEventFromDOM { tileSize, width, height } eventType event =
+mouseEventFromDOM eventType event =
   MouseEvent
     { type: eventType
-    , gridCoords:
-        { x: clip (offsetX event / tileSize) (height - 1)
-        , y: clip (offsetY event / tileSize) (width - 1)
-        } `relativeTo` grid
+    , position:
+        { x: toNumber $ offsetX event, y: toNumber $ offsetY event } `relativeTo` canvas
     , control: ME.ctrlKey event
     , alt: ME.altKey event
     , meta: ME.metaKey event
     , shift: ME.shiftKey event
     , button: ME.button event
     }
-  where
-  clip n b = max (min n b) 0
 
 -- | Convert a DOM keyboard event into our custom event type. Used internally, you shouldn't need it.
 keypressEventFromDOM :: KE.KeyboardEvent -> Event

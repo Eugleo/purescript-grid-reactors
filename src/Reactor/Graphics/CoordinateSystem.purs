@@ -1,15 +1,16 @@
--- | This module provies a wrapper that signalizes whether the wrapped
--- | contents (usually points in space) should be taken relative to the rendering canvas
+-- | This module provides wrappers that signalize whether the
+-- | content (usually points in space) should be taken relative to the rendering canvas
 -- | (i.e. they are in 'pts') or relative to the grid (i.e. they are in 'tiles').
 
 module Reactor.Graphics.CoordinateSystem
-  ( CoordinateSystem(..)
+  ( RelativeToGrid(..)
+  , RelativeToCanvas(..)
+  , bound
+  , class ToGridCoords
   , relativeTo
   , canvas
   , grid
   , relativeToGrid
-  , withCoords
-  , Point(..)
   , moveUp
   , moveDown
   , moveLeft
@@ -18,41 +19,94 @@ module Reactor.Graphics.CoordinateSystem
 
 import Prelude
 
-import Data.Int (floor, toNumber)
 import Data.Generic.Rep (class Generic)
+import Data.Int (floor, toNumber)
+import Data.Newtype (class Newtype)
 import Data.Show.Generic (genericShow)
 import Heterogeneous.Mapping (class HMap, hmap)
 
 type Point = { x :: Number, y :: Number }
 
-data CoordinateSystem a = RelativeToGrid a | RelativeToCanvas a
+newtype RelativeToGrid a = RelativeToGrid a
 
-derive instance functorCoordinateSystem :: Functor CoordinateSystem
-
-derive instance genericMouseEvent :: Generic (CoordinateSystem a) _
-instance showMouseEvent :: Show a => Show (CoordinateSystem a) where
+derive instance functorRelativeToGrid :: Functor (RelativeToGrid)
+derive instance genericRelativeToGrid :: Generic (RelativeToGrid a) _
+instance showRelativeToGrid :: Show a => Show (RelativeToGrid a) where
   show = genericShow
 
--- | Unwrap the wrapped thing and pass it to a function.
-withCoords :: forall a b. CoordinateSystem a -> (a -> b) -> b
-withCoords (RelativeToGrid x) f = f x
-withCoords (RelativeToCanvas x) f = f x
+instance newtypeRelativeToGrid :: Newtype (RelativeToGrid a) a
 
--- | With respect to. Used to wrap things in a coordinate system in a more pleasant way
+newtype RelativeToCanvas a = RelativeToCanvas a
+
+derive instance functorRelativeToCanvas :: Functor (RelativeToCanvas)
+derive instance genericRelativeToCanvas :: Generic (RelativeToCanvas a) _
+instance showRelativeToCanvas :: Show a => Show (RelativeToCanvas a) where
+  show = genericShow
+
+instance newtypeRelativeToCanvas :: Newtype (RelativeToCanvas a) a
+
+class ToCanvasCoords coords where
+  relativeToCanvas
+    :: forall a b
+     . HMap (Number -> Number) a b
+    => Int
+    -> coords a
+    -> RelativeToCanvas b
+
+class ToGridCoords coords where
+  relativeToGrid
+    :: forall a b
+     . HMap (Number -> Number) a b
+    => Int
+    -> coords a
+    -> RelativeToGrid b
+
+  bound
+    :: Int
+    -> Int
+    -> coords Point
+    -> coords Point
+
+clip :: forall a. Semiring a => Ord a => a -> a -> a
+clip n b = max (min n b) zero
+
+instance toGridCoordsRelativeToCanvas :: ToGridCoords RelativeToCanvas where
+  relativeToGrid tileSize (RelativeToCanvas x) =
+    RelativeToGrid $ hmap (toNumber <<< floor <<< (_ / toNumber tileSize)) x
+  bound w h (RelativeToCanvas { x, y }) =
+    RelativeToCanvas { x: clip x (toNumber w - one), y: clip y (toNumber h - one) }
+
+instance toGridCoordsRelativeToGrid :: ToGridCoords RelativeToGrid where
+  relativeToGrid
+    :: forall a b
+     . HMap (Number -> Number) a b
+    => Int
+    -> RelativeToGrid a
+    -> RelativeToGrid b
+  relativeToGrid _ (RelativeToGrid x) =
+    RelativeToGrid $ hmap (identity :: Number -> Number) x
+  bound w h (RelativeToGrid { x, y }) =
+    RelativeToGrid { x: clip x (toNumber w - one), y: clip y (toNumber h - one) }
+
+instance toCanvasCoordsRelativeToCanvas :: ToCanvasCoords RelativeToGrid where
+  relativeToCanvas tileSize (RelativeToGrid x) =
+    RelativeToCanvas $ hmap (_ * toNumber tileSize) x
+
+-- | Used to wrap things in a coordinate system in a more pleasant way
 -- | than what would be possible with the constructors. For example
 -- | ```
 -- | { x: 1, y: 1 } `relativeTo` grid == RelativeToGrid { x: toNumber 1, y: toNumber 1}
 -- | ```
-relativeTo :: forall a b. a -> (a -> CoordinateSystem b) -> CoordinateSystem b
+relativeTo :: forall a b. a -> (a -> b) -> b
 relativeTo = (#)
 
 -- | To be used with `relativeTo`, usually `{ some record } `relativeTo` canvas.
-canvas :: forall a. a -> CoordinateSystem a
+canvas :: forall a. a -> RelativeToCanvas a
 canvas = RelativeToCanvas
 
 -- | To be used with `relativeTo`, usually `{ some record } `relativeTo` grid. Automatically converts
 -- | the numbers in `{ some record }` from `Int` to `Number`.
-grid :: forall a b. HMap (Int -> Number) a b => a -> CoordinateSystem b
+grid :: forall a b. HMap (Int -> Number) a b => a -> RelativeToGrid b
 grid = RelativeToGrid <<< hmap (\n -> toNumber n)
 
 -- | A simple helper functions that subtracts 1 from the `y` coordinate.
@@ -90,13 +144,3 @@ moveRight
   => cs { x :: a, y :: a | r }
   -> cs { x :: a, y :: a | r }
 moveRight = map \r@{ x } -> r { x = x + one }
-
--- | Mostly for internal use.
-relativeToGrid
-  :: forall a b
-   . HMap (Number -> Int) a b
-  => Number
-  -> CoordinateSystem a
-  -> b
-relativeToGrid _ (RelativeToGrid x) = hmap (\n -> floor n) x
-relativeToGrid tileSize (RelativeToCanvas x) = hmap (\n -> floor (n / tileSize)) x

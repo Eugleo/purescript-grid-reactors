@@ -10,7 +10,7 @@ import Data.Array as Array
 import Data.Array.ST (STArray)
 import Data.Array.ST as STArray
 import Data.Grid (Grid(..))
-import Data.Int (toNumber)
+import Data.Int (floor, toNumber)
 import Data.Tuple (snd)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Random (randomInt)
@@ -19,7 +19,7 @@ import Halogen.Hooks as Hooks
 import Reactor.Action (ActionF(..))
 import Reactor.Action as Reactor
 import Reactor.Events (DefaultBehavior(..))
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), relativeToGrid, Point)
+import Reactor.Graphics.CoordinateSystem (bound, relativeToGrid)
 import Reactor.Graphics.Drawing (Drawing, DrawingF(..), DrawingM(..), Shape(..))
 import Reactor.Internal.Types (Cell(..), State)
 import Type.Proxy (Proxy(..))
@@ -48,23 +48,11 @@ evalAction { width, tileSize, height } stateId (Reactor.Action action) =
     newState <- lift $ Hooks.modify stateId \s -> s { world = modifyWorld s.world }
     pure $ cc newState.world
   go _ (Utilities cc) = do
-    let
-      w = toNumber width
-      h = toNumber height
-      cs = toNumber tileSize
-      clip n b = max (min n b) 0.0
-
-      bound :: CoordinateSystem Point -> CoordinateSystem Point
-      bound = case _ of
-        RelativeToCanvas { x, y } ->
-          RelativeToCanvas { x: clip x (cs * w - 0.01), y: clip y (cs * h - 0.01) }
-        RelativeToGrid { x, y } ->
-          RelativeToGrid { x: clip x (w - 1.0), y: clip y (h - 1.0) }
-    pure $ cc { width, tileSize, height, bound }
+    pure $ cc { width, tileSize, height, bound: bound width height }
   go _ (Lift ma) = lift $ lift ma
   go _ (ExecuteDefaultBehavior a) = put Execute >>= const (pure a)
 
-renderDrawing :: Number -> { width :: Int, height :: Int } -> Drawing -> Grid Cell
+renderDrawing :: Int -> { width :: Int, height :: Int } -> Drawing -> Grid Cell
 renderDrawing tileSize g (DrawingM drawing) = Grid array g
   where
   array = STArray.run do
@@ -76,12 +64,12 @@ renderDrawing tileSize g (DrawingM drawing) = Grid array g
   go :: forall a r. STArray r Cell -> (DrawingF a) -> ST r a
   go grid (Filled color shape cc) = do
     case shape of
-      Rectangle origin size -> do
+      Rectangle getOrigin getSize -> do
         let
-          { x, y } = relativeToGrid tileSize origin
-          { width, height } = relativeToGrid tileSize size
+          { x, y } = getOrigin tileSize
+          { width, height } = getSize tileSize
 
-        for x (x + width) \i ->
-          for y (y + height) \j ->
+        for (floor x) (floor x + width) \i ->
+          for (floor y) (floor y + height) \j ->
             STArray.poke (j * g.width + i) (Colored color) grid
         pure cc

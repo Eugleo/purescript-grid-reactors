@@ -10,6 +10,7 @@ module Reactor.Graphics.Drawing
   , mapOver
   , mapOverWithIndex
   , Shape(..)
+  , Point
   , Size
   , tile
   ) where
@@ -22,17 +23,24 @@ import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Data.Foldable (for_)
 import Data.Grid (Grid, enumerate)
 import Data.Maybe (Maybe)
+import Data.Newtype (unwrap)
 import Data.Tuple.Nested ((/\))
+import Reactor.Graphics.CoordinateSystem (RelativeToGrid(..), grid, relativeTo)
 import Reactor.Internal.Helpers (withJust)
-import Reactor.Graphics.CoordinateSystem (CoordinateSystem(..), grid, relativeTo, Point)
 
+type Point = { x :: Number, y :: Number }
 type Size = { width :: Number, height :: Number }
 
-data Shape = Rectangle (CoordinateSystem Point) (CoordinateSystem Size)
+data Shape =
+  Rectangle
+    (Int -> Point)
+    (Int -> { width :: Int, height :: Int })
 
 -- | A 1-square tile on the given point in the grid.
-tile :: CoordinateSystem Point -> Shape
-tile origin = Rectangle origin (RelativeToGrid { width: 1.0, height: 1.0 })
+tile :: RelativeToGrid Point -> Shape
+tile origin = Rectangle
+  (const $ unwrap origin)
+  (const { width: 1, height: 1 })
 
 -- | A DSL for constructing drawings. Currently, only filled shapes are supported. Mostly for internal use.
 -- | Most of the time, you construct a drawing by calling the different helper functions, like `fill`, instead of
@@ -80,8 +88,8 @@ fill color shape = DrawingM $ liftF $ Filled color shape unit
 -- | to obtain its color.
 mapOver :: forall a. Grid a -> (a -> Maybe Color) -> Drawing
 mapOver g f =
-  for_ (enumerate g) $ \(point /\ x) ->
-    withJust (f x) \color ->
+  for_ (enumerate g) $ \(point /\ a) ->
+    withJust (f a) \color ->
       fill color $ tile $ point `relativeTo` grid
 
 -- | Produce a drawing from a grid. For each tile in the grid, call the supplied function
