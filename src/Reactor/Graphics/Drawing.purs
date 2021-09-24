@@ -25,7 +25,7 @@ import Data.Grid (Grid, enumerate)
 import Data.Maybe (Maybe)
 import Data.Newtype (unwrap)
 import Data.Tuple.Nested ((/\))
-import Reactor.Graphics.CoordinateSystem (RelativeToGrid(..), grid, relativeTo)
+import Reactor.Graphics.CoordinateSystem (RelativeToGrid, grid, relativeTo)
 import Reactor.Internal.Helpers (withJust)
 
 type Point = { x :: Number, y :: Number }

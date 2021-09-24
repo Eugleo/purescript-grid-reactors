@@ -10,7 +10,7 @@ import Data.Array as Array
 import Data.Array.ST (STArray)
 import Data.Array.ST as STArray
 import Data.Grid (Grid(..))
-import Data.Int (floor, toNumber)
+import Data.Int (floor)
 import Data.Tuple (snd)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Random (randomInt)
@@ -19,7 +19,7 @@ import Halogen.Hooks as Hooks
 import Reactor.Action (ActionF(..))
 import Reactor.Action as Reactor
 import Reactor.Events (DefaultBehavior(..))
-import Reactor.Graphics.CoordinateSystem (bound, relativeToGrid)
+import Reactor.Graphics.CoordinateSystem (bound)
 import Reactor.Graphics.Drawing (Drawing, DrawingF(..), DrawingM(..), Shape(..))
 import Reactor.Internal.Types (Cell(..), State)
 import Type.Proxy (Proxy(..))
