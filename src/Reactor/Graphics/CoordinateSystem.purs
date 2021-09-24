@@ -10,7 +10,7 @@ module Reactor.Graphics.CoordinateSystem
   , relativeTo
   , canvas
   , grid
-  , relativeToGrid
+  , convertToGrid
   , moveUp
   , moveDown
   , moveLeft
@@ -54,7 +54,7 @@ class ToCanvasCoords coords where
     -> RelativeToCanvas b
 
 class ToGridCoords coords where
-  relativeToGrid
+  convertToGrid
     :: forall a b
      . HMap (Number -> Number) a b
     => Int
@@ -71,19 +71,19 @@ clip :: forall a. Semiring a => Ord a => a -> a -> a
 clip n b = max (min n b) zero
 
 instance toGridCoordsRelativeToCanvas :: ToGridCoords RelativeToCanvas where
-  relativeToGrid tileSize (RelativeToCanvas x) =
+  convertToGrid tileSize (RelativeToCanvas x) =
     RelativeToGrid $ hmap (toNumber <<< floor <<< (_ / toNumber tileSize)) x
   bound w h (RelativeToCanvas { x, y }) =
     RelativeToCanvas { x: clip x (toNumber w - one), y: clip y (toNumber h - one) }
 
 instance toGridCoordsRelativeToGrid :: ToGridCoords RelativeToGrid where
-  relativeToGrid
+  convertToGrid
     :: forall a b
      . HMap (Number -> Number) a b
     => Int
     -> RelativeToGrid a
     -> RelativeToGrid b
-  relativeToGrid _ (RelativeToGrid x) =
+  convertToGrid _ (RelativeToGrid x) =
     RelativeToGrid $ hmap (identity :: Number -> Number) x
   bound w h (RelativeToGrid { x, y }) =
     RelativeToGrid { x: clip x (toNumber w - one), y: clip y (toNumber h - one) }
