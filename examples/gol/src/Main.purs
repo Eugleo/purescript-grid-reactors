@@ -8,12 +8,12 @@ import Data.Grid as Grid
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), isJust)
 import Effect (Effect)
-import Reactor (Event(..), Reactor, executeDefaultBehavior, fill, runReactor, tile, updateW_)
-import Reactor.Events (MouseInteractionType(..))
+import Reactor (Reactor, executeDefaultBehavior, getW, modifyW_, runReactor, updateW_)
+import Reactor.Events (Event(..), MouseInteractionType(..))
 import Reactor.Graphics.Colors as Color
-import Reactor.Graphics.Drawing (Drawing, Point, drawGrid)
+import Reactor.Graphics.Drawing (Drawing, Point, drawGrid, fill, tile)
 import Reactor.Internal.Helpers (withJust)
-import Reactor.Reaction (Reaction, getW, modifyW_)
+import Reactor.Reaction (Reaction)
 
 width :: Int
 width = 20

@@ -17,10 +17,8 @@
 module Reactor
   ( runReactor
   , module Reactor.Reaction
-  , module Reactor.Graphics.Drawing
   , module Reactor.Types
-  , module Reactor.Page
-  , module Reactor.Events
+  , module Reactor.Internal.Helpers
   ) where
 
 import Prelude
@@ -28,6 +26,8 @@ import Prelude
 import Effect (Effect)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
+import Reactor.Internal.Helpers (withJust)
+import Reactor.Page (component) as Reactor.Page
 import Reactor.Reaction
   ( executeDefaultBehavior
   , getW
@@ -37,9 +37,6 @@ import Reactor.Reaction
   , updateW_
   , dimensions
   )
-import Reactor.Events (Event(..))
-import Reactor.Graphics.Drawing (fill, tile)
-import Reactor.Page (component) as Reactor.Page
 import Reactor.Types (Reactor, Configuration)
 
 -- | Start a `Reactor` and render it asynchronously as a Halogen component with the given `Configuration`.
