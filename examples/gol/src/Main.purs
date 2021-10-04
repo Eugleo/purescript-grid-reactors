@@ -28,25 +28,27 @@ data Cell = Dead | Alive Int
 
 derive instance eqCell :: Eq Cell
 
-type World = { cells :: Grid Cell, cursor :: Maybe Point, paused :: Boolean }
+type World = { cells :: Grid Cell, cursor :: Maybe Point, paused :: Boolean, time :: Int, speed :: Int }
 
 reactor :: Reactor World
 reactor = { init, draw, handleEvent, isPaused: \world -> world.paused }
 
 init :: World
-init = { cells: Grid.replicate width height Dead, cursor: Nothing, paused: true }
+init = { cells: Grid.replicate width height Dead, cursor: Nothing, paused: true, time: 0, speed: 60 }
 
 draw :: World -> Drawing
 draw { cells, cursor } = do
   drawGrid cells $ \cell ->
     case cell of
       Dead -> Nothing
-      Alive age -> Just $ Color.hsl ((toNumber age) `mod` 360.0) 0.6 0.75
+      Alive born -> Just $ Color.hsl (toNumber born) 0.6 0.75
   withJust cursor \position -> fill Color.gray200 $ tile position
 
 handleEvent :: Event -> Reaction World
 handleEvent event = case event of
   KeyPress { key: " " } -> togglePause
+  KeyPress { key: "ArrowDown" } -> modifyW_ \w -> w { speed = max (w.speed - 10) 0 }
+  KeyPress { key: "ArrowUp" } -> modifyW_ \w -> w { speed = w.speed + 10 }
 
   Mouse { type: Move, position } ->
     updateW_ { cursor: Just $ position }
@@ -60,24 +62,26 @@ handleEvent event = case event of
   where
   togglePause = modifyW_ \world -> world { paused = not world.paused }
   toggleCell position = do
-    { cells: cs } <- getW
-    updateW_ { cells: Grid.modifyAt' position toggle cs }
-  toggle cell = case cell of
-    Dead -> Alive 0
+    { cells: cs, time } <- getW
+    updateW_ { cells: Grid.modifyAt' position (toggle time) cs }
+  toggle time cell = case cell of
+    Dead -> Alive time
     Alive _ -> Dead
 
 advanceWorld :: Reaction World
 advanceWorld = do
-  { cells } <- getW
-  updateW_ { cells: Grid.modifyAllWithIndex (modifyCell cells) cells }
+  { cells, time, speed } <- getW
+  modifyW_ \w -> w { time = w.time + 1 }
+  when (time `mod` speed == 0) $
+    updateW_ { cells: Grid.modifyAllWithIndex (modifyCell cells time) cells }
   where
-  modifyCell cells position cell =
+  modifyCell cells time position cell =
     let
       ns = neigborCount cells position
     in
       case cell of
-        Dead -> if ns == 3 then Alive 0 else Dead
-        Alive age -> if ns == 2 || ns == 3 then Alive (age + 1) else Dead
+        Dead -> if ns == 3 then Alive time else Dead
+        Alive born -> if ns == 2 || ns == 3 then Alive born else Dead
 
   neigborCount cells { x, y } =
     Array.length
