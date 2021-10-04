@@ -9,7 +9,6 @@
 
 module Reactor.Types (Reactor, Configuration) where
 
-import Data.Unit (Unit)
 import Reactor.Reaction (Reaction)
 import Reactor.Events (Event)
 import Reactor.Graphics.Drawing (Drawing)

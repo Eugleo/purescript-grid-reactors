@@ -12,7 +12,15 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (throw)
-import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, clearRect, filled, getCanvasElementById, getContext2D, launchCanvasAff_) as Canvas
+import Graphics.CanvasAction
+  ( class CanvasStyle
+  , class MonadCanvasAction
+  , clearRect
+  , filled
+  , getCanvasElementById
+  , getContext2D
+  , launchCanvasAff_
+  ) as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath) as Canvas
 import Halogen as H
 import Halogen.HTML as HH
@@ -21,7 +29,14 @@ import Halogen.Hooks (HookM)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
-import Reactor.Events (Event(..), MouseInteractionType(..), keypressEventFromDOM, mouseEventFromDOM, optionallyPreventDefault, windowPerformanceNow)
+import Reactor.Events
+  ( Event(..)
+  , MouseInteractionType(..)
+  , keypressEventFromDOM
+  , mouseEventFromDOM
+  , optionallyPreventDefault
+  , windowPerformanceNow
+  )
 import Reactor.Internal.Eval (evalAction, renderDrawing)
 import Reactor.Internal.Helpers (withJust)
 import Reactor.Internal.Types (Cell(..), Properties, State)
