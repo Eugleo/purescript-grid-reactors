@@ -67,11 +67,11 @@ import Reactor.Graphics.Drawing (Drawing)
 -- |         _ -> executeDefaultBehavior
 -- |   }
 -- | ```
-type Reactor m world =
+type Reactor world =
   { init :: world
   , draw :: world -> Drawing
   , isPaused :: world -> Boolean
-  , handleEvent :: Event -> Reaction m world Unit
+  , handleEvent :: Event -> Reaction world
   }
 
 -- | Configuration for the Halogen component that renders the reactor. Although a reactor

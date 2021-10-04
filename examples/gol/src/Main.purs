@@ -8,7 +8,6 @@ import Data.Grid as Grid
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), isJust)
 import Effect (Effect)
-import Effect.Class (class MonadEffect)
 import Reactor (Event(..), Reactor, executeDefaultBehavior, fill, runReactor, tile, updateW_)
 import Reactor.Events (MouseInteractionType(..))
 import Reactor.Graphics.Colors as Color
@@ -31,7 +30,7 @@ derive instance eqCell :: Eq Cell
 
 type World = { cells :: Grid Cell, cursor :: Maybe Point, paused :: Boolean }
 
-reactor :: forall m. MonadEffect m => Reactor m World
+reactor :: Reactor World
 reactor = { init, draw, handleEvent, isPaused: \world -> world.paused }
 
 init :: World
@@ -45,7 +44,7 @@ draw { cells, cursor } = do
       Alive age -> Just $ Color.hsl ((toNumber age) `mod` 360.0) 0.6 0.75
   withJust cursor \position -> fill Color.gray200 $ tile position
 
-handleEvent :: forall m. MonadEffect m => Event -> Reaction m World Unit
+handleEvent :: Event -> Reaction World
 handleEvent event = case event of
   KeyPress { key: " " } -> togglePause
 
@@ -67,7 +66,7 @@ handleEvent event = case event of
     Dead -> Alive 0
     Alive _ -> Dead
 
-advanceWorld :: forall m. MonadEffect m => Reaction m World Unit
+advanceWorld :: Reaction World
 advanceWorld = do
   { cells } <- getW
   updateW_ { cells: Grid.modifyAllWithIndex (modifyCell cells) cells }

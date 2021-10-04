@@ -11,13 +11,13 @@ import Data.Array.ST (STArray)
 import Data.Array.ST as STArray
 import Data.Grid (Grid(..))
 import Data.Tuple (snd)
-import Effect.Class (class MonadEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM, StateId)
 import Halogen.Hooks as Hooks
 import Reactor.Events (DefaultBehavior(..))
 import Reactor.Graphics.Drawing (Drawing, DrawingF(..), DrawingM(..), Shape(..))
 import Reactor.Internal.Types (Cell(..), State)
-import Reactor.Reaction (ReactionF(..))
+import Reactor.Reaction (ReactionF(..), ReactionM(..))
 import Reactor.Reaction as Reactor
 import Type.Proxy (Proxy(..))
 
@@ -26,9 +26,9 @@ evalAction
    . MonadEffect m
   => { width :: Int, tileSize :: Int, height :: Int }
   -> StateId (State m world)
-  -> Reactor.Reaction m world a
+  -> Reactor.ReactionM world a
   -> HookM m DefaultBehavior
-evalAction { width, tileSize, height } stateId (Reactor.Reaction action) =
+evalAction { width, tileSize, height } stateId (ReactionM action) =
   map snd $ runStateT (foldFree (go (Proxy :: Proxy world)) action) Prevent
 
   where
@@ -36,14 +36,14 @@ evalAction { width, tileSize, height } stateId (Reactor.Reaction action) =
     :: forall f b
      . MonadEffect f
     => Proxy world
-    -> ReactionF f world b
+    -> ReactionF world b
     -> StateT DefaultBehavior (HookM f) b
   go _ (Modify modifyWorld cc) = do
     newState <- lift $ Hooks.modify stateId \s -> s { world = modifyWorld s.world }
     pure $ cc newState.world
   go _ (Dimensions cc) = do
     pure $ cc { width, tileSize, height }
-  go _ (Lift ma) = lift $ lift ma
+  go _ (Lift eff) = liftEffect eff
   go _ (ExecuteDefaultBehavior a) = put Execute >>= const (pure a)
 
 renderDrawing :: Int -> { width :: Int, height :: Int } -> Drawing -> Grid Cell

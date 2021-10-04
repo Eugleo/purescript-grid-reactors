@@ -16,14 +16,14 @@ data Cell = Colored Color | EmptyCell
 
 derive instance eqCell :: Eq Cell
 
-type Properties m world =
+type Properties world =
   { title :: String
   , width :: Int
   , height :: Int
   , tileSize :: Int
   , draw :: world -> Drawing
   , isPaused :: world -> Boolean
-  , handleEvent :: Event -> Reaction m world Unit
+  , handleEvent :: Event -> Reaction world
   }
 
 type State m world =

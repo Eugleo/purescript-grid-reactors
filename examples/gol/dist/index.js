@@ -5629,8 +5629,10 @@ var PS = {};
   var Control_Bind = $PS["Control.Bind"];
   var Control_Monad = $PS["Control.Monad"];
   var Control_Monad_Rec_Class = $PS["Control.Monad.Rec.Class"];
+  var Control_Monad_Trans_Class = $PS["Control.Monad.Trans.Class"];
   var Data_Functor = $PS["Data.Functor"];
-  var Data_Tuple = $PS["Data.Tuple"];                    
+  var Data_Tuple = $PS["Data.Tuple"];
+  var Effect_Class = $PS["Effect.Class"];                
   var StateT = function (x) {
       return x;
   };
@@ -5708,6 +5710,20 @@ var PS = {};
           }
       };
   };
+  var monadEffectState = function (dictMonadEffect) {
+      return {
+          liftEffect: (function () {
+              var $110 = Control_Monad_Trans_Class.lift(monadTransStateT)(dictMonadEffect.Monad0());
+              var $111 = Effect_Class.liftEffect(dictMonadEffect);
+              return function ($112) {
+                  return $110($111($112));
+              };
+          })(),
+          Monad0: function () {
+              return monadStateT(dictMonadEffect.Monad0());
+          }
+      };
+  };
   var monadRecStateT = function (dictMonadRec) {
       return {
           tailRecM: function (f) {
@@ -5756,6 +5772,7 @@ var PS = {};
   exports["bindStateT"] = bindStateT;
   exports["monadRecStateT"] = monadRecStateT;
   exports["monadTransStateT"] = monadTransStateT;
+  exports["monadEffectState"] = monadEffectState;
   exports["monadStateStateT"] = monadStateStateT;
 })(PS);
 (function($PS) {
@@ -10838,13 +10855,6 @@ var PS = {};
   var subscribe$prime = function (esc) {
       return HookM(Control_Monad_Free.liftF(new Subscribe(esc, Data_Function["const"](Data_Unit.unit))));
   };
-  var monadTransHookM = {
-      lift: function (dictMonad) {
-          return function ($79) {
-              return HookM(Control_Monad_Free.liftF(Lift.create($79)));
-          };
-      }
-  };
   var monadHookM = Control_Monad_Free.freeMonad;
   var monadEffectHookM = function (dictMonadEffect) {
       return {
@@ -10919,7 +10929,6 @@ var PS = {};
   exports["bindHookM"] = bindHookM;
   exports["monadHookM"] = monadHookM;
   exports["monadEffectHookM"] = monadEffectHookM;
-  exports["monadTransHookM"] = monadTransHookM;
   exports["monadRecHookM"] = monadRecHookM;
 })(PS);
 (function($PS) {
@@ -12257,7 +12266,7 @@ var PS = {};
       };
       return ExecuteDefaultBehavior;
   })();
-  var Reaction = function (x) {
+  var ReactionM = function (x) {
       return x;
   };
 
@@ -12265,7 +12274,7 @@ var PS = {};
   // | The 'world' is the current state of the reactor.
   // | Returns the value of the new world.
   var modifyW = function (f) {
-      return Reaction(Control_Monad_Free.liftF(new Modify(f, Control_Category.identity(Control_Category.categoryFn))));
+      return ReactionM(Control_Monad_Free.liftF(new Modify(f, Control_Category.identity(Control_Category.categoryFn))));
   };
 
   // | Obtain the current value of the world.
@@ -12296,7 +12305,7 @@ var PS = {};
   // |
   // | Usually you'll call this in the `handleEvent` function, for events that you _don't_ want to handle,
   // | e.g. when pressing 'J' doesn't do anything in your game.
-  var executeDefaultBehavior = Reaction(Control_Monad_Free.liftF(new ExecuteDefaultBehavior(Data_Unit.unit)));                
+  var executeDefaultBehavior = ReactionM(Control_Monad_Free.liftF(new ExecuteDefaultBehavior(Data_Unit.unit)));                
   var bindReaction = Control_Monad_Free.freeBind;
   exports["modifyW_"] = modifyW_;
   exports["updateW_"] = updateW_;
@@ -12326,6 +12335,7 @@ var PS = {};
   var Data_Functor = $PS["Data.Functor"];
   var Data_Grid = $PS["Data.Grid"];
   var Data_Tuple = $PS["Data.Tuple"];
+  var Effect_Class = $PS["Effect.Class"];
   var Halogen_Hooks_HookM = $PS["Halogen.Hooks.HookM"];
   var Reactor_Events = $PS["Reactor.Events"];
   var Reactor_Internal_Types = $PS["Reactor.Internal.Types"];
@@ -12386,7 +12396,7 @@ var PS = {};
                                   }));
                               };
                               if (v3 instanceof Reactor_Reaction.Lift) {
-                                  return Control_Monad_Trans_Class.lift(Control_Monad_State_Trans.monadTransStateT)(Halogen_Hooks_HookM.monadHookM)(Control_Monad_Trans_Class.lift(Halogen_Hooks_HookM.monadTransHookM)(dictMonadEffect1.Monad0())(v3.value0));
+                                  return Effect_Class.liftEffect(Control_Monad_State_Trans.monadEffectState(Halogen_Hooks_HookM.monadEffectHookM(dictMonadEffect1)))(v3.value0);
                               };
                               if (v3 instanceof Reactor_Reaction.ExecuteDefaultBehavior) {
                                   return Control_Bind.bind(Control_Monad_State_Trans.bindStateT(Halogen_Hooks_HookM.monadHookM))(Control_Monad_State_Class.put(Control_Monad_State_Trans.monadStateStateT(Halogen_Hooks_HookM.monadHookM))(Reactor_Events.Execute.value))(Data_Function["const"](Control_Applicative.pure(Control_Monad_State_Trans.applicativeStateT(Halogen_Hooks_HookM.monadHookM))(v3.value0)));
@@ -12461,7 +12471,6 @@ var PS = {};
   exports["mouseup"] = mouseup;
 })(PS);
 (function($PS) {
-  // Generated by purs version 0.14.4
   "use strict";
   $PS["Reactor.Page"] = $PS["Reactor.Page"] || {};
   var exports = $PS["Reactor.Page"];
@@ -12618,6 +12627,8 @@ var PS = {};
           };
       };
   };
+
+  // TODO Optimize, do not call when paused
   var handleTick = function (dictMonadEffect) {
       return function (stateId) {
           return function (propsId) {
@@ -12747,6 +12758,9 @@ var PS = {};
       };
   };
   var canvasId = "canvas";
+
+  // | Defines the Halogen component that runs and renders a reactor. The component is based on Halogen hooks.
+  // | Usually you don't need to call this yourself; instead, you should use `Reactor.runReactor` that calls this internally.
   var component = function (dictMonadEffect) {
       return function (v) {
           return function (v1) {
@@ -12892,7 +12906,22 @@ var PS = {};
   exports["component"] = component;
 })(PS);
 (function($PS) {
-  // Generated by purs version 0.14.4
+  
+  // | As the [Pyret documentation](https://www.pyret.org/docs/latest/reactors.html) puts it,
+  // | a reactor is a value enabling the creation of time-based animations, simulations, and interactive programs.
+  // | During the creation of a reactor, the user supplies a function for handling clock ticks,
+  // | and functions for handling mouse and keyboard input events.
+  // | The reactor calls these event handlers whenever the respective event occurs.
+  // | From within the event handlers, the reactor's state — or, the _world_, as we call it —
+  // | can be updated. After each world update, the reactor renders the new world with the supplied drawing function.
+  // |
+  // | You can read more in the documentation of the type `Reactor` below, under the documentation for the module `Reactor.Types`.
+  // | The base Reactor module re-exports some useful functions, apart
+  // | from the base color pallete which is best imported by `import Reactor.Graphics.Colors as Color`.
+  // |
+  // | In our implementation, the rendering is done using a hooks-based Halogen component.
+  // | Also, the world needs to have at least a boolean field named `paused`, that signalizes
+  // | to the reactor whether the internal clock should be ticking or not.
   "use strict";
   $PS["Reactor"] = $PS["Reactor"] || {};
   var exports = $PS["Reactor"];
@@ -12902,6 +12931,10 @@ var PS = {};
   var Halogen_Aff_Util = $PS["Halogen.Aff.Util"];
   var Halogen_VDom_Driver = $PS["Halogen.VDom.Driver"];
   var Reactor_Page = $PS["Reactor.Page"];                  
+
+  // | Start a `Reactor` and render it asynchronously as a Halogen component with the given `Configuration`.
+  // | The reactor's world is required to have a field named `paused` that is used to decide
+  // | whether the reactor's clock should be running (`paused: false`) or not (`paused: true`).
   var runReactor = function (reactor) {
       return function (config) {
           return Halogen_Aff_Util.runHalogenAff(Control_Bind.bind(Effect_Aff.bindAff)(Halogen_Aff_Util.awaitBody)(function (body) {
@@ -13018,7 +13051,6 @@ var PS = {};
   var Data_Grid = $PS["Data.Grid"];
   var Data_Int = $PS["Data.Int"];
   var Data_Maybe = $PS["Data.Maybe"];
-  var Effect_Aff = $PS["Effect.Aff"];
   var Reactor = $PS["Reactor"];
   var Reactor_Events = $PS["Reactor.Events"];
   var Reactor_Graphics_Colors = $PS["Reactor.Graphics.Colors"];
@@ -13076,15 +13108,15 @@ var PS = {};
           });
       });
   };
-  var advanceWorld = function (dictMonadEffect) {
+  var advanceWorld = (function () {
       var neigborCount = function (cells) {
           return function (v) {
               return Data_Array.length(Data_Array.filter(function (c) {
                   return Data_Maybe.isJust(c) && Data_Eq.notEq(Data_Maybe.eqMaybe(eqCell))(c)(new Data_Maybe.Just(Dead.value));
               })(Data_Functor.map(Data_Functor.functorArray)(Data_Grid.index(cells))(Control_Bind.bind(Control_Bind.bindArray)([ -1 | 0, 0, 1 ])(function (a) {
                   return Control_Bind.bind(Control_Bind.bindArray)([ -1 | 0, 0, 1 ])(function (b) {
-                      var $23 = a !== 0 || b !== 0;
-                      if ($23) {
+                      var $20 = a !== 0 || b !== 0;
+                      if ($20) {
                           return Control_Applicative.pure(Control_Applicative.applicativeArray)({
                               x: v.x + a | 0,
                               y: v.y + b | 0
@@ -13100,15 +13132,15 @@ var PS = {};
               return function (cell) {
                   var ns = neigborCount(cells)(position);
                   if (cell instanceof Dead) {
-                      var $27 = ns === 3;
-                      if ($27) {
+                      var $24 = ns === 3;
+                      if ($24) {
                           return new Alive(0);
                       };
                       return Dead.value;
                   };
                   if (cell instanceof Alive) {
-                      var $28 = ns === 2 || ns === 3;
-                      if ($28) {
+                      var $25 = ns === 2 || ns === 3;
+                      if ($25) {
                           return new Alive(cell.value0 + 1 | 0);
                       };
                       return Dead.value;
@@ -13122,63 +13154,59 @@ var PS = {};
               cells: Data_Grid.modifyAllWithIndex(modifyCell(v.cells))(v.cells)
           });
       });
-  };
-  var handleEvent = function (dictMonadEffect) {
-      return function (event) {
-          var togglePause = Reactor_Reaction.modifyW_(function (world) {
-              return {
-                  paused: !world.paused,
-                  cells: world.cells,
-                  cursor: world.cursor
-              };
-          });
-          var toggle = function (cell) {
-              if (cell instanceof Dead) {
-                  return new Alive(0);
-              };
-              if (cell instanceof Alive) {
-                  return Dead.value;
-              };
-              throw new Error("Failed pattern match at Example.Gol.Main (line 66, column 17 - line 68, column 20): " + [ cell.constructor.name ]);
+  })();
+  var handleEvent = function (event) {
+      var togglePause = Reactor_Reaction.modifyW_(function (world) {
+          return {
+              paused: !world.paused,
+              cells: world.cells,
+              cursor: world.cursor
           };
-          var toggleCell = function (position) {
-              return Control_Bind.bind(Reactor_Reaction.bindReaction)(Reactor_Reaction.getW)(function (v) {
-                  return Reactor_Reaction.updateW_()()({
-                      cells: Data_Grid["modifyAt'"](position)(toggle)(v.cells)
-                  });
-              });
+      });
+      var toggle = function (cell) {
+          if (cell instanceof Dead) {
+              return new Alive(0);
           };
-          if (event instanceof Reactor_Events.KeyPress && event.value0.key === " ") {
-              return togglePause;
+          if (cell instanceof Alive) {
+              return Dead.value;
           };
-          if (event instanceof Reactor_Events.Mouse && event.value0.type instanceof Reactor_Events.Move) {
+          throw new Error("Failed pattern match at Example.Gol.Main (line 66, column 17 - line 68, column 20): " + [ cell.constructor.name ]);
+      };
+      var toggleCell = function (position) {
+          return Control_Bind.bind(Reactor_Reaction.bindReaction)(Reactor_Reaction.getW)(function (v) {
               return Reactor_Reaction.updateW_()()({
-                  cursor: Data_Maybe.Just.create(event.value0.position)
+                  cells: Data_Grid["modifyAt'"](position)(toggle)(v.cells)
               });
-          };
-          if (event instanceof Reactor_Events.Mouse && event.value0.type instanceof Reactor_Events.ButtonDown) {
-              return toggleCell(event.value0.position);
-          };
-          if (event instanceof Reactor_Events.Mouse && event.value0.type instanceof Reactor_Events.Drag) {
-              return toggleCell(event.value0.position);
-          };
-          if (event instanceof Reactor_Events.Tick) {
-              return advanceWorld(dictMonadEffect);
-          };
-          return Reactor_Reaction.executeDefaultBehavior;
+          });
       };
-  };
-  var reactor = function (dictMonadEffect) {
-      return {
-          init: init,
-          draw: draw,
-          handleEvent: handleEvent(dictMonadEffect),
-          isPaused: function (world) {
-              return world.paused;
-          }
+      if (event instanceof Reactor_Events.KeyPress && event.value0.key === " ") {
+          return togglePause;
       };
+      if (event instanceof Reactor_Events.Mouse && event.value0.type instanceof Reactor_Events.Move) {
+          return Reactor_Reaction.updateW_()()({
+              cursor: Data_Maybe.Just.create(event.value0.position)
+          });
+      };
+      if (event instanceof Reactor_Events.Mouse && event.value0.type instanceof Reactor_Events.ButtonDown) {
+          return toggleCell(event.value0.position);
+      };
+      if (event instanceof Reactor_Events.Mouse && event.value0.type instanceof Reactor_Events.Drag) {
+          return toggleCell(event.value0.position);
+      };
+      if (event instanceof Reactor_Events.Tick) {
+          return advanceWorld;
+      };
+      return Reactor_Reaction.executeDefaultBehavior;
   };
-  var main = Reactor.runReactor(reactor(Effect_Aff.monadEffectAff))({
+  var reactor = {
+      init: init,
+      draw: draw,
+      handleEvent: handleEvent,
+      isPaused: function (world) {
+          return world.paused;
+      }
+  };
+  var main = Reactor.runReactor(reactor)({
       title: "Game of Life",
       width: width,
       height: height

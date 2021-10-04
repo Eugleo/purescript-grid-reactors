@@ -7,7 +7,7 @@ module Reactor.Reaction
   , updateW_
   , getW
   , executeDefaultBehavior
-  , ReactionM
+  , ReactionM(..)
   , ReactionF(..)
   , Dimensions
   ) where
@@ -17,7 +17,6 @@ import Prelude
 import Control.Monad.Free (Free, liftF)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Effect (Effect)
-import Effect.Aff (Aff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Prim.Row (class Union, class Nub)
 
@@ -32,7 +31,6 @@ type Dimensions =
 -- | in this module, like `modify_`, instead of building an `ReactionF` manually.
 data ReactionF world a
   = Lift (Effect a)
-  | LiftA (Aff a)
   | Modify (world -> world) (world -> a)
   | Dimensions (Dimensions -> a)
   | ExecuteDefaultBehavior (a)
@@ -40,8 +38,9 @@ data ReactionF world a
 derive instance functorReactionF :: Functor m => Functor (ReactionF world)
 
 type Reaction world = ReactionM world Unit
+
 newtype ReactionM world a =
-  Reaction (Free (ReactionF world) a)
+  ReactionM (Free (ReactionF world) a)
 
 derive newtype instance functorReaction :: Functor (ReactionM world)
 derive newtype instance applyReaction :: Apply (ReactionM world)
@@ -52,7 +51,7 @@ derive newtype instance semigroupReaction :: Semigroup a => Semigroup (ReactionM
 derive newtype instance monoidReaction :: Monoid a => Monoid (ReactionM world a)
 
 instance monadEffectReaction :: MonadEffect m => MonadEffect (ReactionM world) where
-  liftEffect = Reaction <<< liftF <<< Lift <<< liftEffect
+  liftEffect = ReactionM <<< liftF <<< Lift <<< liftEffect
 
 instance monadRecReaction :: MonadRec (ReactionM world) where
   tailRecM k a =
@@ -65,13 +64,13 @@ instance monadRecReaction :: MonadRec (ReactionM world) where
 -- | - `tileSize :: Int` the size of one grid tile, in points. The size is set internally,
 -- | and this is the only way to get its value.
 dimensions :: forall world. ReactionM world Dimensions
-dimensions = Reaction $ liftF $ Dimensions identity
+dimensions = ReactionM $ liftF $ Dimensions identity
 
 -- | Modify the current world by passing in a `(world -> world)` updating function.
 -- | The 'world' is the current state of the reactor.
 -- | Returns the value of the new world.
 modifyW :: forall world. (world -> world) -> ReactionM world world
-modifyW f = Reaction $ liftF $ Modify f identity
+modifyW f = ReactionM $ liftF $ Modify f identity
 
 -- | Modify the current value of the world by passing in a `(world -> world)` updating function.
 -- | The 'world' is the current state of the reactor.
@@ -112,4 +111,4 @@ getW = modifyW identity
 -- | Usually you'll call this in the `handleEvent` function, for events that you _don't_ want to handle,
 -- | e.g. when pressing 'J' doesn't do anything in your game.
 executeDefaultBehavior :: forall world. Reaction world
-executeDefaultBehavior = Reaction $ liftF $ ExecuteDefaultBehavior unit
+executeDefaultBehavior = ReactionM $ liftF $ ExecuteDefaultBehavior unit

@@ -39,14 +39,14 @@ canvasId :: String
 canvasId = "canvas"
 
 type StateId m world = Hooks.StateId (State m world)
-type PropsId m world = Hooks.StateId (Properties m world)
+type PropsId world = Hooks.StateId (Properties world)
 
 -- | Defines the Halogen component that runs and renders a reactor. The component is based on Halogen hooks.
 -- | Usually you don't need to call this yourself; instead, you should use `Reactor.runReactor` that calls this internally.
 component
   :: forall world q i o m
    . MonadEffect m
-  => Reactor m world
+  => Reactor world
   -> Configuration
   -> H.Component q i o m
 component { init, draw, handleEvent, isPaused } { title, width, height } =
@@ -134,7 +134,7 @@ handleMouse
   :: forall m world
    . MonadEffect m
   => StateId m world
-  -> PropsId m world
+  -> PropsId world
   -> (Boolean -> MouseInteractionType)
   -> ME.MouseEvent
   -> HookM m Unit
@@ -156,7 +156,7 @@ handleKey
   :: forall m world
    . MonadEffect m
   => StateId m world
-  -> PropsId m world
+  -> PropsId world
   -> KE.KeyboardEvent
   -> HookM m Unit
 handleKey stateId propsId event = do
@@ -173,7 +173,7 @@ handleTick
   :: forall m world
    . MonadEffect m
   => StateId m world
-  -> PropsId m world
+  -> PropsId world
   -> Listener (HookM m Unit)
   -> Effect Unit
 handleTick stateId propsId listener =
@@ -198,7 +198,7 @@ requestGridRerender
   :: forall m world
    . MonadEffect m
   => StateId m world
-  -> PropsId m world
+  -> PropsId world
   -> HookM m Unit
 requestGridRerender stateId propsId = do
   { renderListener } <- Hooks.get stateId
@@ -213,7 +213,7 @@ renderGrid
   :: forall m world
    . MonadEffect m
   => StateId m world
-  -> PropsId m world
+  -> PropsId world
   -> Listener (HookM m Unit)
   -> Effect Unit
 renderGrid stateId propsId listener = do

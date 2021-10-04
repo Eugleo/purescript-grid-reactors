@@ -26,7 +26,6 @@ module Reactor
 import Prelude
 
 import Effect (Effect)
-import Effect.Aff (Aff)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 import Reactor.Reaction
@@ -48,7 +47,7 @@ import Reactor.Types (Reactor, Configuration)
 -- | whether the reactor's clock should be running (`paused: false`) or not (`paused: true`).
 runReactor
   :: forall world
-   . Reactor Aff world
+   . Reactor world
   -> Configuration
   -> Effect Unit
 runReactor reactor config =
