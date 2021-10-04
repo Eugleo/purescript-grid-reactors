@@ -12,15 +12,7 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (throw)
-import Graphics.CanvasAction
-  ( class CanvasStyle
-  , class MonadCanvasAction
-  , clearRect
-  , filled
-  , getCanvasElementById
-  , getContext2D
-  , launchCanvasAff_
-  ) as Canvas
+import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, clearRect, filled, getCanvasElementById, getContext2D, launchCanvasAff_) as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath) as Canvas
 import Halogen as H
 import Halogen.HTML as HH
@@ -29,14 +21,7 @@ import Halogen.Hooks (HookM)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
-import Reactor.Events
-  ( Event(..)
-  , MouseEventType(..)
-  , keypressEventFromDOM
-  , mouseEventFromDOM
-  , optionallyPreventDefault
-  , windowPerformanceNow
-  )
+import Reactor.Events (Event(..), MouseInteractionType(..), keypressEventFromDOM, mouseEventFromDOM, optionallyPreventDefault, windowPerformanceNow)
 import Reactor.Internal.Eval (evalAction, renderDrawing)
 import Reactor.Internal.Helpers (withJust)
 import Reactor.Internal.Types (Cell(..), Properties, State)
@@ -61,10 +46,10 @@ type PropsId m world = Hooks.StateId (Properties m world)
 component
   :: forall world q i o m
    . MonadEffect m
-  => Reactor m { paused :: Boolean | world }
+  => Reactor m world
   -> Configuration
   -> H.Component q i o m
-component { init, draw, handleEvent } { title, width, height } =
+component { init, draw, handleEvent, isPaused } { title, width, height } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ stateId <- Hooks.useState
       { context: Nothing
@@ -75,7 +60,7 @@ component { init, draw, handleEvent } { title, width, height } =
       , lastGrid: Nothing
       }
     { tileSize } /\ propsId <- Hooks.useState
-      { title, draw, handleEvent, width, height, tileSize: 30 }
+      { title, draw, handleEvent, width, height, tileSize: 30, isPaused }
 
     Hooks.useLifecycleEffect $
       (Canvas.getCanvasElementById canvasId) >>= case _ of
@@ -150,7 +135,7 @@ handleMouse
    . MonadEffect m
   => StateId m world
   -> PropsId m world
-  -> (Boolean -> MouseEventType)
+  -> (Boolean -> MouseInteractionType)
   -> ME.MouseEvent
   -> HookM m Unit
 handleMouse stateId propsId getEventType event = do
@@ -163,7 +148,7 @@ handleMouse stateId propsId getEventType event = do
     Hooks.modify_ stateId \s -> s { mouseButtonPressed = false }
   defaultBehavior <-
     evalAction { height, width, tileSize } stateId
-      (handleEvent (mouseEventFromDOM eventType event))
+      (handleEvent (mouseEventFromDOM { tileSize, height, width } eventType event))
   optionallyPreventDefault defaultBehavior (ME.toEvent event)
   requestGridRerender stateId propsId
 
@@ -187,21 +172,21 @@ handleKey stateId propsId event = do
 handleTick
   :: forall m world
    . MonadEffect m
-  => StateId m { paused :: Boolean | world }
-  -> PropsId m { paused :: Boolean | world }
+  => StateId m world
+  -> PropsId m world
   -> Listener (HookM m Unit)
   -> Effect Unit
 handleTick stateId propsId listener =
   notify listener do
     { lastTick, world } <- Hooks.get stateId
-    { handleEvent } <- Hooks.get propsId
+    { handleEvent, isPaused } <- Hooks.get propsId
     window <- liftEffect Web.window
     now <- liftEffect $ windowPerformanceNow window
     Hooks.modify_ stateId \s -> s { lastTick = now }
-    when (not world.paused) $ do
+    unless (isPaused world) $ do
       { height, width, tileSize } <- Hooks.get propsId
       _ <- evalAction { height, width, tileSize } stateId $
-        handleEvent (TickEvent { delta: (now - lastTick) / 1000.0 })
+        handleEvent (Tick { delta: (now - lastTick) / 1000.0 })
       liftEffect $ renderGrid stateId propsId listener
     _ <- liftEffect $
       Web.requestAnimationFrame

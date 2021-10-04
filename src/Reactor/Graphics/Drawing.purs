@@ -7,11 +7,10 @@ module Reactor.Graphics.Drawing
   , DrawingM(..)
   , DrawingF(..)
   , fill
-  , mapOver
-  , mapOverWithIndex
+  , drawGrid
+  , drawGridWithIndex
   , Shape(..)
   , Point
-  , Size
   , tile
   ) where
 
@@ -21,15 +20,12 @@ import Color (Color)
 import Control.Monad.Free (Free, liftF)
 import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Data.Foldable (for_)
-import Data.Grid (Grid, enumerate)
+import Data.Grid (Grid, enumerate, Coordinates)
 import Data.Maybe (Maybe)
-import Data.Newtype (unwrap)
 import Data.Tuple.Nested ((/\))
-import Reactor.Graphics.CoordinateSystem (RelativeToGrid, grid, relativeTo)
 import Reactor.Internal.Helpers (withJust)
 
-type Point = { x :: Number, y :: Number }
-type Size = { width :: Number, height :: Number }
+type Point = { x :: Int, y :: Int }
 
 data Shape =
   Rectangle
@@ -37,9 +33,9 @@ data Shape =
     (Int -> { width :: Int, height :: Int })
 
 -- | A 1-square tile on the given point in the grid.
-tile :: RelativeToGrid Point -> Shape
+tile :: Point -> Shape
 tile origin = Rectangle
-  (const $ unwrap origin)
+  (const origin)
   (const { width: 1, height: 1 })
 
 -- | A DSL for constructing drawings. Currently, only filled shapes are supported. Mostly for internal use.
@@ -86,20 +82,11 @@ fill color shape = DrawingM $ liftF $ Filled color shape unit
 
 -- | Produce a drawing from a grid. For each tile in the grid, call the supplied function
 -- | to obtain its color.
-mapOver :: forall a. Grid a -> (a -> Maybe Color) -> Drawing
-mapOver g f =
-  for_ (enumerate g) $ \(point /\ a) ->
-    withJust (f a) \color ->
-      fill color $ tile $ point `relativeTo` grid
+drawGrid :: forall a. Grid a -> (a -> Maybe Color) -> Drawing
+drawGrid grid getTileColor = drawGridWithIndex grid (const getTileColor)
 
--- | Produce a drawing from a grid. For each tile in the grid, call the supplied function
--- | to obtain its color. The function receives not only the value of the tile, but also its index.
-mapOverWithIndex
-  :: forall a
-   . Grid a
-  -> ({ x :: Int, y :: Int } -> a -> Maybe Color)
-  -> Drawing
-mapOverWithIndex g f =
-  for_ (enumerate g) $ \(point /\ x) ->
-    withJust (f point x) \color ->
-      fill color $ tile $ point `relativeTo` grid
+drawGridWithIndex :: forall a. Grid a -> (Coordinates -> a -> Maybe Color) -> Drawing
+drawGridWithIndex grid getTileColor =
+  for_ (enumerate grid) $ \(point /\ t) ->
+    withJust (getTileColor point t) \color ->
+      fill color $ tile point

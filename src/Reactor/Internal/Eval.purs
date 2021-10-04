@@ -10,18 +10,15 @@ import Data.Array as Array
 import Data.Array.ST (STArray)
 import Data.Array.ST as STArray
 import Data.Grid (Grid(..))
-import Data.Int (floor)
 import Data.Tuple (snd)
-import Effect.Class (class MonadEffect, liftEffect)
-import Effect.Random (randomInt)
+import Effect.Class (class MonadEffect)
 import Halogen.Hooks (HookM, StateId)
 import Halogen.Hooks as Hooks
-import Reactor.Action (ActionF(..))
-import Reactor.Action as Reactor
 import Reactor.Events (DefaultBehavior(..))
-import Reactor.Graphics.CoordinateSystem (bound)
 import Reactor.Graphics.Drawing (Drawing, DrawingF(..), DrawingM(..), Shape(..))
 import Reactor.Internal.Types (Cell(..), State)
+import Reactor.Reaction (ReactionF(..))
+import Reactor.Reaction as Reactor
 import Type.Proxy (Proxy(..))
 
 evalAction
@@ -29,9 +26,9 @@ evalAction
    . MonadEffect m
   => { width :: Int, tileSize :: Int, height :: Int }
   -> StateId (State m world)
-  -> Reactor.Action m world a
+  -> Reactor.Reaction m world a
   -> HookM m DefaultBehavior
-evalAction { width, tileSize, height } stateId (Reactor.Action action) =
+evalAction { width, tileSize, height } stateId (Reactor.Reaction action) =
   map snd $ runStateT (foldFree (go (Proxy :: Proxy world)) action) Prevent
 
   where
@@ -39,16 +36,13 @@ evalAction { width, tileSize, height } stateId (Reactor.Action action) =
     :: forall f b
      . MonadEffect f
     => Proxy world
-    -> Reactor.ActionF f world b
+    -> ReactionF f world b
     -> StateT DefaultBehavior (HookM f) b
-  go _ (RandomNumber min max cc) = do
-    n <- liftEffect (randomInt min max)
-    pure $ cc n
   go _ (Modify modifyWorld cc) = do
     newState <- lift $ Hooks.modify stateId \s -> s { world = modifyWorld s.world }
     pure $ cc newState.world
-  go _ (Utilities cc) = do
-    pure $ cc { width, tileSize, height, bound: bound width height }
+  go _ (Dimensions cc) = do
+    pure $ cc { width, tileSize, height }
   go _ (Lift ma) = lift $ lift ma
   go _ (ExecuteDefaultBehavior a) = put Execute >>= const (pure a)
 
@@ -56,8 +50,7 @@ renderDrawing :: Int -> { width :: Int, height :: Int } -> Drawing -> Grid Cell
 renderDrawing tileSize g (DrawingM drawing) = Grid array g
   where
   array = STArray.run do
-    grid <- STArray.new
-    _ <- flip STArray.pushAll grid $ Array.replicate (g.width * g.height) EmptyCell
+    grid <- STArray.unsafeThaw $ Array.replicate (g.width * g.height) EmptyCell
     foldFree (go grid) drawing
     pure grid
 
@@ -69,7 +62,7 @@ renderDrawing tileSize g (DrawingM drawing) = Grid array g
           { x, y } = getOrigin tileSize
           { width, height } = getSize tileSize
 
-        for (floor x) (floor x + width) \i ->
-          for (floor y) (floor y + height) \j ->
+        for x (x + width) \i ->
+          for y (y + height) \j ->
             STArray.poke (j * g.width + i) (Colored color) grid
         pure cc

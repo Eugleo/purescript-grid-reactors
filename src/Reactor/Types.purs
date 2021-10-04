@@ -10,7 +10,7 @@
 module Reactor.Types (Reactor, Configuration) where
 
 import Data.Unit (Unit)
-import Reactor.Action (Action)
+import Reactor.Reaction (Reaction)
 import Reactor.Events (Event)
 import Reactor.Graphics.Drawing (Drawing)
 
@@ -70,7 +70,8 @@ import Reactor.Graphics.Drawing (Drawing)
 type Reactor m world =
   { init :: world
   , draw :: world -> Drawing
-  , handleEvent :: Event -> Action m world Unit
+  , isPaused :: world -> Boolean
+  , handleEvent :: Event -> Reaction m world Unit
   }
 
 -- | Configuration for the Halogen component that renders the reactor. Although a reactor

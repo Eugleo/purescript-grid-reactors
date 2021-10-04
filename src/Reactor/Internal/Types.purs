@@ -7,7 +7,7 @@ import Data.Maybe (Maybe)
 import Graphics.CanvasAction (Context2D)
 import Halogen.Hooks (HookM)
 import Halogen.Subscription (Listener)
-import Reactor.Action (Action)
+import Reactor.Reaction (Reaction)
 import Reactor.Events (Event)
 import Reactor.Graphics.Drawing (Drawing)
 import Color (Color)
@@ -22,7 +22,8 @@ type Properties m world =
   , height :: Int
   , tileSize :: Int
   , draw :: world -> Drawing
-  , handleEvent :: Event -> Action m world Unit
+  , isPaused :: world -> Boolean
+  , handleEvent :: Event -> Reaction m world Unit
   }
 
 type State m world =

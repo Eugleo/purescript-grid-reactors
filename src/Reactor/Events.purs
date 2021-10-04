@@ -3,9 +3,10 @@ module Reactor.Events
   ( optionallyPreventDefault
   , DefaultBehavior(..)
   , mouseEventFromDOM
-  , MouseEventType(..)
+  , MouseInteractionType(..)
   , keypressEventFromDOM
   , Event(..)
+  , Modifiers
   , windowPerformanceNow
   ) where
 
@@ -17,7 +18,6 @@ import Data.Show.Generic (genericShow)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Halogen.Hooks (HookM)
-import Reactor.Graphics.CoordinateSystem (RelativeToCanvas, canvas, relativeTo)
 import Web.Event.Event (Event, preventDefault) as Web
 import Web.HTML (Window)
 import Web.UIEvent.KeyboardEvent as KE
@@ -46,10 +46,11 @@ optionallyPreventDefault behavior =
     <<< liftEffect
     <<< Web.preventDefault
 
+-- TODO Update
 -- | The main mouse event types, from the point of view of the rendered grid.
 -- | A `Drag` occurs when the mouse button is down during a `Move`.
 -- | Right-button clicks are not handled, those get handled by the browser.
-data MouseEventType
+data MouseInteractionType
   = ButtonUp
   | ButtonDown
   | Drag
@@ -87,23 +88,22 @@ data MouseEventType
 -- | - Common special keys have intuitive names. For example: `ArrowLeft`, `ArrowRight`, `ArrowUp`,
 -- | `ArrowDown`. Full list can be seen on [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
 
+type Modifiers =
+  { control :: Boolean
+  , meta :: Boolean
+  , alt :: Boolean
+  , shift :: Boolean
+  }
+
 data Event
-  = TickEvent { delta :: Number }
-  | MouseEvent
-      { type :: MouseEventType
-      , position :: RelativeToCanvas { x :: Number, y :: Number }
-      , control :: Boolean
-      , meta :: Boolean
-      , alt :: Boolean
-      , shift :: Boolean
-      , button :: Int
+  = Tick { delta :: Number }
+  | Mouse
+      { type :: MouseInteractionType
+      , position :: { x :: Int, y :: Int }
+      , positionOnCanvas :: { x :: Number, y :: Number }
+      , modifiers :: Modifiers
       }
-  | KeypressEvent String
-      { shift :: Boolean
-      , control :: Boolean
-      , alt :: Boolean
-      , meta :: Boolean
-      }
+  | KeyPress { key :: String, modifiers :: Modifiers }
 
 foreign import windowPerformanceNow :: Window -> Effect Number
 
@@ -111,9 +111,9 @@ derive instance genericEvent :: Generic Event _
 instance showEvent :: Show Event where
   show = genericShow
 
-derive instance eqMouseEventType :: Eq MouseEventType
-derive instance genericMouseEventType :: Generic MouseEventType _
-instance showMyADT :: Show MouseEventType where
+derive instance eqMouseInteractionType :: Eq MouseInteractionType
+derive instance genericMouseInteractionType :: Generic MouseInteractionType _
+instance showMouseInteractionType :: Show MouseInteractionType where
   show = genericShow
 
 foreign import offsetX :: ME.MouseEvent -> Int
@@ -121,27 +121,38 @@ foreign import offsetY :: ME.MouseEvent -> Int
 
 -- | Convert a DOM mouse event into our custom event type. Used internally, you shouldn't need it.
 mouseEventFromDOM
-  :: MouseEventType
+  :: { width :: Int, height :: Int, tileSize :: Int }
+  -> MouseInteractionType
   -> ME.MouseEvent
   -> Event
-mouseEventFromDOM eventType event =
-  MouseEvent
+mouseEventFromDOM { width, height, tileSize } eventType event =
+  Mouse
     { type: eventType
     , position:
-        { x: toNumber $ offsetX event, y: toNumber $ offsetY event } `relativeTo` canvas
-    , control: ME.ctrlKey event
-    , alt: ME.altKey event
-    , meta: ME.metaKey event
-    , shift: ME.shiftKey event
-    , button: ME.button event
+        { x: clip (offsetX event / tileSize) (height - 1)
+        , y: clip (offsetY event / tileSize) (width - 1)
+        }
+    , positionOnCanvas:
+        { x: toNumber $ offsetX event, y: toNumber $ offsetY event }
+    , modifiers:
+        { control: ME.ctrlKey event
+        , alt: ME.altKey event
+        , meta: ME.metaKey event
+        , shift: ME.shiftKey event
+        }
     }
+  where
+  clip n b = max (min n b) 0
 
 -- | Convert a DOM keyboard event into our custom event type. Used internally, you shouldn't need it.
 keypressEventFromDOM :: KE.KeyboardEvent -> Event
 keypressEventFromDOM event =
-  KeypressEvent (KE.key event)
-    { shift: KE.shiftKey event
-    , control: KE.ctrlKey event
-    , alt: KE.altKey event
-    , meta: KE.metaKey event
+  KeyPress
+    { key: KE.key event
+    , modifiers:
+        { shift: KE.shiftKey event
+        , control: KE.ctrlKey event
+        , alt: KE.altKey event
+        , meta: KE.metaKey event
+        }
     }

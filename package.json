@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "example-gol": "spago --config examples/gol/spago.dhall bundle-app --main Example.Gol.Main --to examples/gol/dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -20,9 +20,13 @@
   },
   "homepage": "https://github.com/Eugleo/purescript-grid-reactors#readme",
   "devDependencies": {
+    "ansi-regex": ">=5.0.1",
+    "autoprefixer": "^10.3.6",
+    "parcel": "^2.0.0-rc.0",
+    "postcss": "^8.3.8",
     "purescript": "^0.14.4",
     "purs-tidy": "^0.5.2",
     "spago": "^0.20.3",
-    "ansi-regex": ">=5.0.1"
+    "tailwindcss": "^2.2.16"
   }
 }

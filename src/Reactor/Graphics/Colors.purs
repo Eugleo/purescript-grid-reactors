@@ -62,15 +62,17 @@ module Reactor.Graphics.Colors
   , pink700
   , pink800
   , pink900
+  , hsl
   ) where
 
 import Prelude
-import Color (Color, fromHexString)
+import Color (Color)
+import Color as Color
 import Data.Maybe (fromJust)
 import Partial.Unsafe (unsafePartial)
 
 fromHex :: String -> Color
-fromHex = (unsafePartial fromJust) <<< fromHexString
+fromHex = (unsafePartial fromJust) <<< Color.fromHexString
 
 gray50 :: Color
 gray50 = fromHex "#F9FAFB"
@@ -251,3 +253,6 @@ pink800 = fromHex "#9D174D"
 
 pink900 :: Color
 pink900 = fromHex "#831843"
+
+hsl :: Number -> Number -> Number -> Color
+hsl = Color.hsl

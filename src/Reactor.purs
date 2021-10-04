@@ -16,8 +16,7 @@
 
 module Reactor
   ( runReactor
-  , module Reactor.Action
-  , module Reactor.Graphics.CoordinateSystem
+  , module Reactor.Reaction
   , module Reactor.Graphics.Drawing
   , module Reactor.Types
   , module Reactor.Page
@@ -30,19 +29,16 @@ import Effect (Effect)
 import Effect.Aff (Aff)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
-import Reactor.Action
+import Reactor.Reaction
   ( executeDefaultBehavior
-  , get
-  , modify_
-  , togglePause
-  , utilities
+  , getW
+  , modifyW
+  , modifyW_
+  , updateW
+  , updateW_
+  , dimensions
   )
 import Reactor.Events (Event(..))
-import Reactor.Graphics.CoordinateSystem
-  ( canvas
-  , grid
-  , relativeTo
-  )
 import Reactor.Graphics.Drawing (fill, tile)
 import Reactor.Page (component) as Reactor.Page
 import Reactor.Types (Reactor, Configuration)
@@ -52,7 +48,7 @@ import Reactor.Types (Reactor, Configuration)
 -- | whether the reactor's clock should be running (`paused: false`) or not (`paused: true`).
 runReactor
   :: forall world
-   . Reactor Aff { paused :: Boolean | world }
+   . Reactor Aff world
   -> Configuration
   -> Effect Unit
 runReactor reactor config =
