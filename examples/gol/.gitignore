@@ -1,0 +1,31 @@
+# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,purescript
+# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,purescript
+
+### PureScript ###
+# Dependencies
+.psci_modules
+.spago
+bower_components
+node_modules
+
+# Generated files
+.psci
+output
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,purescript
