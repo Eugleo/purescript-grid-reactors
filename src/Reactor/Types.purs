@@ -13,58 +13,19 @@ import Reactor.Reaction (Reaction)
 import Reactor.Events (Event)
 import Reactor.Graphics.Drawing (Drawing)
 
--- | The reactor is a simple record. A reactor is is parametrized over the following type variables:
--- | - `m` signifies which monad will be used to run
--- | the event handlers, which is mostly an implementation detail.
--- | Usually `m` is `Effect` or `Aff` (i.e. asynchronous `Effect`). You can safely ignore this most of the time.
--- | - `world` denotes what is the type of the internal state of the reactor.
--- |This is where the state of your game or simulation is saved.
+-- | The reactor is a simple record. Reactors are parametrized over the type of the `world` which is saved in the reactor.
 -- |
 -- | The fields in the record are the following:
--- | - `init` is the initial state of the reactor's world
+-- | - `initial` is the initial state of the reactor's world
+-- | - `isPaused` is a function used by the reactor to find out whether its internal clock should be paused or not. The clock is paused when `isPaused` returns `true`.
 -- | - `draw` is a function used to render the world anytime it is changed
--- | - `handleEvent` is a function for handling the three types of events: keypress events, mouse events, and tick events.
--- | The events are handled by running the action returned by `handleEvent`.
+-- | - `handleEvent` is a function for handling the three types of events that can occur during your game or simulation:
+-- | keypress events, mouse events, and tick events.
+-- | The events are handled by running the `Reaction` returned by `handleEvent`.
 -- |   - Tick events are fired on every tick of the reactor's clock, around 60 times a second, provided the reactor is not paused.
 -- |   - Keypress events are fired when a key on a keyboard is pressed.
--- |   - Mouse events are fired whenever a mouse is moved above the canvas (the drawing area of the reactor), when the canvas is clicked, or when the user drags something (i.e. clicks and then moves the mouse).
--- |
--- | For example, when ran, the following reactor would render a player at the initial position,
--- | and would allow the user to move the player by pressing arrow keys. The clock is paused,
--- | and mouse events are ignored.
--- | ```haskell
--- | import Reactor.Action
--- |   (executeDefaultBehavior, modify_, utilities)
--- | import Reactor.Events (KeypressEvent(..))
--- | import Reactor.Graphics.Colors as Color
--- | import Reactor.Graphics.CoordinateSystem
--- |   (CoordinateSystem, grid, moveDown, moveLeft, moveRight, moveUp, relativeTo)
--- | import Reactor.Graphics.Drawing (fill, tile)
--- | import Reactor.Types (Reactor)
--- |
--- | type World =
--- |   { player :: CoordinateSystem { x :: Number, y :: Number }
--- |   , paused :: Boolean
--- |   }
--- |
--- | reactor :: forall m. Reactor m World
--- | reactor =
--- |   { init: { player: { x: 0, y: 0 } `relativeTo` grid, paused: true }
--- |   , draw: \{ player } -> fill Color.blue400 $ tile player
--- |   , handleEvent: \event -> do
--- |       { bound } <- utilities
--- |       case event of
--- |         KeypressEvent "ArrowLeft" _ ->
--- |           modify_ \w -> w { player = bound $ moveLeft w.player }
--- |         KeypressEvent "ArrowRight" _ ->
--- |           modify_ \w -> w { player = bound $ moveRight w.player }
--- |         KeypressEvent "ArrowDown" _ ->
--- |           modify_ \w -> w { player = bound $ moveDown w.player }
--- |         KeypressEvent "ArrowUp" _ ->
--- |           modify_ \w -> w { player = bound $ moveUp w.player }
--- |         KeypressEvent " " _ -> togglePause
--- |         _ -> executeDefaultBehavior
--- |   }
+-- |   - Mouse events are fired whenever a mouse is moved above the canvas (the drawing area of the reactor),
+-- | when the canvas is clicked, or when the user drags something (i.e. clicks and then moves the mouse).
 -- | ```
 type Reactor world =
   { initial :: world
@@ -73,8 +34,10 @@ type Reactor world =
   , handleEvent :: Event -> Reaction world
   }
 
--- | Configuration for the Halogen component that renders the reactor. Although a reactor
--- | is a general structure, our reactors focus on grid-based games and simulations.
+-- | Configuration for the Halogen component that renders the reactor.
+-- | The component creates everything on the webpage you see when you run the reactor.
+-- | Although a reactor
+-- | is a general structure, this library focuses on reactors with grid-based rendering.
 -- | The component thus needs a little more info than just what is in already the reactor, namely:
 -- | - `title`, the title of the webpage where the reactor is rendered
 -- | - `width`, the width of the grid, in tiles

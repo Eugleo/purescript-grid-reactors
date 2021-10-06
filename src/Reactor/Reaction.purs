@@ -26,9 +26,9 @@ type Dimensions =
   , tileSize :: Int
   }
 
--- | A DSL for constructing reactions. Mostly for internal use.
--- | Most of the time, you construct an action by calling the different helper functions
--- | in this module, like `modify_`, instead of building an `ReactionF` manually.
+-- | A DSL for constructing reactions. For internal use only.
+-- | You should construct a `Reaction` by calling the different helper functions
+-- | in this module, like `modifyW`, instead of building it manually.
 data ReactionF world a
   = Lift (Effect a)
   | Modify (world -> world) (world -> a)
@@ -39,6 +39,13 @@ derive instance functorReactionF :: Functor m => Functor (ReactionF world)
 
 type Reaction world = ReactionM world Unit
 
+-- | `ReactionM world a` describes a general reaction in a reactor with the world `world`,
+-- | that returns `a`. In the `handleEvent` function we use reactions which don't return anything
+-- | (or more precisely, return `Unit`), `ReactionM world Unit`. To simplify things, the following
+-- | type synonym is set up.
+-- | ```
+-- | type Reaction world = ReactionM world Unit
+-- | ```
 newtype ReactionM world a =
   ReactionM (Free (ReactionF world) a)
 
@@ -60,21 +67,30 @@ instance monadRecReaction :: MonadRec (ReactionM world) where
       Done y -> pure y
 
 -- | Get a record of the following:
--- | - `height :: Int`, `width :: Int`, the dimensions of the grid
+-- | - `height :: Int`, the height of the grid, in tiles
+-- | - `width :: Int`, the width of the grid, in tiles
 -- | - `tileSize :: Int` the size of one grid tile, in points. The size is set internally,
 -- | and this is the only way to get its value.
 dimensions :: forall world. ReactionM world Dimensions
 dimensions = ReactionM $ liftF $ Dimensions identity
 
 -- | Modify the current world by passing in a `(world -> world)` updating function.
--- | The 'world' is the current state of the reactor.
+-- | The function will receive the current value of the world, and should return the new updated value.
+-- |
 -- | Returns the value of the new world.
+-- | ```
+-- | type World = { player :: { x :: Int, y :: Int } }
+-- |
+-- | handleEvent event = case event of
+-- |   KeyPress { key : "ArrowUp" } ->
+-- |     newWorld <- modifyW \oldWorld ->
+-- |       { player: { x : oldWorld.player.x, y: oldWorld.player.y + 1 } }
+-- |     log $ "New world is: " <> show newWorld
+-- | ```
 modifyW :: forall world. (world -> world) -> ReactionM world world
 modifyW f = ReactionM $ liftF $ Modify f identity
 
--- | Modify the current value of the world by passing in a `(world -> world)` updating function.
--- | The 'world' is the current state of the reactor.
--- | Doesn't return anything, as opposed to the `modify` action.
+-- | Similar to `modifyW`, but doesn't return the value of the new world.
 modifyW_ :: forall world. (world -> world) -> Reaction world
 modifyW_ = map (const unit) <<< modifyW
 
@@ -85,6 +101,20 @@ foreign import unsafeMergeFields
   -> Record changes
   -> Record world
 
+-- | Modify certain fields of the world by passing in new values for them.
+-- |
+-- | Returns the value of the new world.
+-- | ```
+-- | type World = { player :: { x :: Int, y :: Int } }
+-- |
+-- | handleEvent event = case event of
+-- |   KeyPress { key : "ArrowUp" } ->
+-- |     oldWorld <- getW
+-- |     newWorld <-
+-- |       updateW
+-- |         { player: { x : oldWorld.player.x, y: oldWorld.player.y + 1 } }
+-- |     log $ "New world is: " <> show newWorld
+-- | ```
 updateW
   :: forall changes t c world
    . Union changes t world
@@ -93,6 +123,7 @@ updateW
   -> ReactionM (Record world) (Record world)
 updateW changes = modifyW \world -> (unsafeMergeFields world changes)
 
+-- | Similar to `updateW`, but doesn't return the value of the new world.
 updateW_
   :: forall changes t c world
    . Union changes t world

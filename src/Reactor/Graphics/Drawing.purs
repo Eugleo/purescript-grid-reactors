@@ -10,7 +10,6 @@ module Reactor.Graphics.Drawing
   , drawGrid
   , drawGridWithIndex
   , Shape(..)
-  , Point
   , tile
   ) where
 
@@ -25,29 +24,27 @@ import Data.Maybe (Maybe)
 import Data.Tuple.Nested ((/\))
 import Reactor.Internal.Helpers (withJust)
 
-type Point = { x :: Int, y :: Int }
-
 data Shape =
   Rectangle
-    (Int -> Point)
+    (Int -> Coordinates)
     (Int -> { width :: Int, height :: Int })
 
 -- | A 1-square tile on the given point in the grid.
-tile :: Point -> Shape
+tile :: Coordinates -> Shape
 tile origin = Rectangle
   (const origin)
   (const { width: 1, height: 1 })
 
--- | A DSL for constructing drawings. Currently, only filled shapes are supported. Mostly for internal use.
--- | Most of the time, you construct a drawing by calling the different helper functions, like `fill`, instead of
--- | manually constructing a `DrawingF`.
+-- | A DSL for constructing drawings. Currently, only filled shapes are supported. `DrawingF` is for internal use.
+-- | You should construct a drawing by calling the different helper functions, like `fill`, instead of
+-- | manually calling the `DrawingF` data contructors.
 data DrawingF a
   = Filled Color Shape a
 
 derive instance functorDrawingF :: Functor m => Functor DrawingF
 
 -- | A free monad for `DrawingF` that enables you to use `do`-notation when constructing drawings.
--- | Internal implementation detail.
+-- | Just an internal implementation detail.
 newtype DrawingM a = DrawingM (Free DrawingF a)
 
 derive newtype instance functorDrawingM :: Functor DrawingM
@@ -76,15 +73,18 @@ instance monadRecDrawingM :: MonadRec DrawingM where
 -- | ```
 type Drawing = DrawingM Unit
 
--- | Fill a shape with a color.
+-- | Given a shape (e.g. a rectangle), draw it and fill it with the provided color.
 fill :: Color -> Shape -> Drawing
 fill color shape = DrawingM $ liftF $ Filled color shape unit
 
--- | Produce a drawing from a grid. For each tile in the grid, call the supplied function
--- | to obtain its color.
+-- | This function produces a drawing from a grid. For each cell in the grid, it calls the supplied
+-- | `(a -> Maybe Color)` function to obtain its color.
+-- | The cell is then drawn it using the `fill` and `tile` functions.
 drawGrid :: forall a. Grid a -> (a -> Maybe Color) -> Drawing
 drawGrid grid getTileColor = drawGridWithIndex grid (const getTileColor)
 
+-- | A function almost identical to `drawGrid`, only the function matching colors to grid cells
+-- | is provided with an index of the cell in addition to the value of the cell.
 drawGridWithIndex :: forall a. Grid a -> (Coordinates -> a -> Maybe Color) -> Drawing
 drawGridWithIndex grid getTileColor =
   for_ (enumerate grid) $ \(point /\ t) ->

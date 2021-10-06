@@ -254,5 +254,9 @@ pink800 = fromHex "#9D174D"
 pink900 :: Color
 pink900 = fromHex "#831843"
 
+-- | Create a `Color` from hue, saturation and lightness values.
+-- | The hue is given in degrees, as a Number between 0.0 and 360.0.
+-- | Both saturation and lightness are numbers between 0.0 and 1.0.
+-- | To find out how HSL works, you can check the [Wikipedia article](https://en.wikipedia.org/wiki/HSL_and_HSV).
 hsl :: Number -> Number -> Number -> Color
 hsl = Color.hsl

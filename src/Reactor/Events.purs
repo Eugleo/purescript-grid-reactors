@@ -13,6 +13,7 @@ module Reactor.Events
 import Prelude
 
 import Data.Generic.Rep (class Generic)
+import Data.Grid (Coordinates)
 import Data.Int (toNumber)
 import Data.Show.Generic (genericShow)
 import Effect (Effect)
@@ -46,7 +47,6 @@ optionallyPreventDefault behavior =
     <<< liftEffect
     <<< Web.preventDefault
 
--- TODO Update
 -- | The main mouse event types, from the point of view of the rendered grid.
 -- | A `Drag` occurs when the mouse button is down during a `Move`.
 -- | Right-button clicks are not handled, those get handled by the browser.
@@ -58,52 +58,51 @@ data MouseInteractionType
   | Leave
   | Move
 
--- | This types describes the different events that occur during the life of a reactor. You
+-- | This type describes the different events that occur during the life of a reactor. You
 -- | pattern match on this in the `handleEvent` function.
 -- |
 -- | ## Tick Event
 -- | This event is fired on every clock-tick in the reactor.
 -- | The attribute `delta` is the time from the last tick, in seconds.
 -- | There's approximately 60 ticks per second, however, the number _can_ vary depending on the browser's current available resources.
--- | For the smoothest motion, you should calculate the traveled distance based on the
--- | speed of the entity and the `delta`.
 -- |
 -- | ## Mouse Event
 -- | This event is fired whenever the user presses a button on their mouse, or moves the mouse over the rendering grid.
 -- | Explanation of each of the fields:
 -- | - `type` is the type of the event (drag, button up, etc.)
--- | - `x` and `y` are the coordinates of the event. They are relative to the rendering grid,
--- | and denote the _tile_ where the event hapened.
--- | - `control`, `meta`, `shift`, and `alt` denote whether any modifier keys were pressed when the event happened
--- | - `button` is an identifier of the button that has been pressed during the event, if applicable.
--- | See this [entry in MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent/button) for more details.
+-- | - `position` is the position of the event relative to the rendering grid (i.e. in tiles).
+-- | - `positionOnCanvas` is the position of the event relative to the rendering canvas (i.e. in pixels).
+-- | - for more information on `modifiers` see the documentation of the type `Modifiers`.
 -- |
 -- | ## Keypress Event
 -- | This event is fired whenever the user presses down a key on the keyboard.
 -- | The key is passed in the event as a `String`, with the following rules:
 -- | - Numbers, letters, and symbols all have intuitive codes (type A → get "A", type ů → get "ů").
 -- | Notably, pressing space produces an event with a literal space, `" "`.
--- | - Any modifier keys that were pressed simultaneously with the main key are passed in the record
--- | `{ shift, control, alt, meta }`. A `meta` key is the Windows button on Windows, and the Command button on the Mac.
+-- | - Any modifier keys that were pressed simultaneously with the main key are passed in the record `modifiers`.
 -- | - Common special keys have intuitive names. For example: `ArrowLeft`, `ArrowRight`, `ArrowUp`,
 -- | `ArrowDown`. Full list can be seen on [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values).
 
+data Event
+  = Tick { delta :: Number }
+  | Mouse
+      { type :: MouseInteractionType
+      , position :: Coordinates
+      , positionOnCanvas :: { x :: Number, y :: Number }
+      , modifiers :: Modifiers
+      }
+  | KeyPress { key :: String, modifiers :: Modifiers }
+
+-- | `Mouse` and `KeyPress` events carry the info about modifier keys that were pressed
+-- | when the event happened.
+-- |  A `meta` key is the Windows button on Windows, and the Command button on the Mac.
+-- | The rest are the common modifier keys.
 type Modifiers =
   { control :: Boolean
   , meta :: Boolean
   , alt :: Boolean
   , shift :: Boolean
   }
-
-data Event
-  = Tick { delta :: Number }
-  | Mouse
-      { type :: MouseInteractionType
-      , position :: { x :: Int, y :: Int }
-      , positionOnCanvas :: { x :: Number, y :: Number }
-      , modifiers :: Modifiers
-      }
-  | KeyPress { key :: String, modifiers :: Modifiers }
 
 foreign import windowPerformanceNow :: Window -> Effect Number
 
