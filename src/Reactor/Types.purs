@@ -67,7 +67,7 @@ import Reactor.Graphics.Drawing (Drawing)
 -- |   }
 -- | ```
 type Reactor world =
-  { init :: world
+  { initial :: world
   , draw :: world -> Drawing
   , isPaused :: world -> Boolean
   , handleEvent :: Event -> Reaction world

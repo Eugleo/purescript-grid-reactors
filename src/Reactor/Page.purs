@@ -64,13 +64,13 @@ component
   => Reactor world
   -> Configuration
   -> H.Component q i o m
-component { init, draw, handleEvent, isPaused } { title, width, height } =
+component { initial, draw, handleEvent, isPaused } { title, width, height } =
   Hooks.component \_ _ -> Hooks.do
     _ /\ stateId <- Hooks.useState
       { context: Nothing
       , renderListener: Nothing
       , mouseButtonPressed: false
-      , world: init
+      , world: initial
       , lastTick: 0.0
       , lastGrid: Nothing
       }
