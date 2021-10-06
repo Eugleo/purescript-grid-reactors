@@ -1,3 +1,8 @@
+-- | This module supplies a simple datastructure for working with 2D grids.
+-- | `Grid` is based on (immutable) arrays from the module `Data.Array`, so it has
+-- | similar performance characteristics: fast access (anywhere), slow updates
+-- | (the whole structure is copied), efficient memory usage.
+
 module Data.Grid
   ( Grid(..)
   , enumerate
@@ -9,48 +14,48 @@ module Data.Grid
   , index
   , replicate
   , Coordinates
+  , fromFoldable
   , construct
-  , modifyAll
-  , modifyAllWithIndex
   ) where
 
 import Prelude
 
 import Data.Array ((..))
 import Data.Array as Array
-import Data.Array.ST as STArray
-import Data.Foldable (class Foldable, foldMap, foldl, foldr, for_)
+import Data.Foldable (class Foldable, foldMap, foldl, foldr, length)
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
 import Data.Maybe (Maybe(..), fromMaybe)
-import Data.Tuple (Tuple(..), uncurry)
+import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
 
+-- | A helper type representing a point on a grid.
 type Coordinates = { x :: Int, y :: Int }
+
+-- | A grid is represented a plain 1D array. It is saved there row by row, starting from the top.
+-- | Functions in this module take 2D coordinates, but translate them interally to 1D index
+-- | into the array.
 data Grid a = Grid (Array a) { width :: Int, height :: Int }
 
 instance Functor Grid where
   map f (Grid xs cfg) = Grid (map f xs) cfg
 
 instance FunctorWithIndex Coordinates Grid where
-  mapWithIndex f g@(Grid _ cfg) = Grid (map (uncurry f) $ enumerate g) cfg
+  mapWithIndex f (Grid xs cfg) = Grid (Array.mapWithIndex (f <<< to2D cfg.width) xs) cfg
 
 instance Foldable Grid where
   foldr f z (Grid xs _) = foldr f z xs
   foldl f z (Grid xs _) = foldl f z xs
   foldMap f (Grid xs _) = foldMap f xs
 
-enumerate :: forall a. Grid a -> Array (Tuple Coordinates a)
-enumerate (Grid xs { width }) = enumerateAsGrid width xs
+fromFoldable :: forall f a. Foldable f ⇒ Int -> Int -> f a → Maybe (Grid a)
+fromFoldable width height xs
+  | length xs /= width * height = Nothing
+  | otherwise = Just $ Grid (Array.fromFoldable xs) { width, height }
 
-enumerateAsGrid
-  :: forall f a
-   . FunctorWithIndex Int f
-  => Int
-  -> f a
-  -> f (Tuple Coordinates a)
-enumerateAsGrid width = mapWithIndex go
+enumerate :: forall a. Grid a -> Array (Tuple Coordinates a)
+enumerate g = xs
   where
-  go i = Tuple (to2D width i)
+  Grid xs _ = mapWithIndex Tuple g
 
 to1D :: Int -> Coordinates -> Int
 to1D width { x, y } = y * width + x
@@ -58,38 +63,42 @@ to1D width { x, y } = y * width + x
 to2D :: Int -> Int -> Coordinates
 to2D width i = { x: i `mod` width, y: i / width }
 
+-- | This function provides a safe way to read a value at a particular index from a grid.
+-- | The position `{ x: 0, y: 0 }` is in the top left corner of the grid.
+-- | ```
+-- | sentence = Grid.fromFoldable 2 2 [ "Hello", "World", "Guys", "!" ]
+-- |
+-- | index sentence { x:0, y:0 } = Just "Hello"
+-- | index sentence { x:2, y:0 } = Nothing
+-- | ```
 index :: forall a. Grid a -> Coordinates -> Maybe a
 index (Grid xs { height, width }) { x, y }
   | x < 0 || x >= width || y < 0 || y >= height = Nothing
   | otherwise = Array.index xs $ to1D width { x, y }
 
+-- | Operator alias for `index`.
+-- | ```
+-- | index sentence { x:1, y:0 } = sentence !? { x:1, y:0 }
+-- | ```
 infixl 8 index as !?
 
+-- | Similar to `updateAt`, but doesn't perform any changes when the index is out of bounds.
 updateAt' :: forall a. Coordinates -> a -> Grid a -> Grid a
 updateAt' coords new g = fromMaybe g $ updateAt coords new g
 
+-- | Change the element at the specified index, creating a new grid, or returning `Nothing` if the index is out of bounds.
 updateAt :: forall a. Coordinates -> a -> Grid a -> Maybe (Grid a)
 updateAt coords new = modifyAt coords (const new)
 
+-- | Similar to `modifyAt`, but doesn't perform any changes when the index is out of bounds.
 modifyAt' :: forall a. Coordinates -> (a -> a) -> Grid a -> Grid a
 modifyAt' coords f g = fromMaybe g $ modifyAt coords f g
 
+-- | Apply a function to the element at the specified index, creating a new grid, or returning `Nothing` if the index is out of bounds.
 modifyAt :: forall a. Coordinates -> (a -> a) -> Grid a -> Maybe (Grid a)
 modifyAt coords f (Grid xs cfg@{ width }) =
   map (\ys -> Grid ys cfg) $
     Array.modifyAt (to1D width coords) f xs
-
-modifyAll :: forall a. (a -> a) -> Grid a -> Grid a
-modifyAll f = modifyAllWithIndex (const f)
-
-modifyAllWithIndex :: forall a. (Coordinates -> a -> a) -> Grid a -> Grid a
-modifyAllWithIndex f (Grid xs cfg) = Grid modified cfg
-  where
-  modified = STArray.run do
-    ys <- STArray.thaw xs
-    for_ (enumerateAsGrid cfg.width xs) \(Tuple coords _) ->
-      STArray.modify (to1D cfg.width coords) (f coords) ys
-    pure ys
 
 replicate :: forall a. Int -> Int -> a -> Grid a
 replicate width height x = Grid (Array.replicate (width * height) x) { width, height }
@@ -105,9 +114,9 @@ differencesFrom
   => Grid a
   -> Grid a
   -> Array (Tuple Coordinates a)
-differencesFrom (Grid tiles cfg@{ width }) (Grid tilesReference cfgReference)
-  | cfg /= cfgReference = enumerateAsGrid width tiles
-  | otherwise = map (\(Tuple i (x /\ _)) -> Tuple i x)
+differencesFrom g@(Grid tiles cfg@{ width }) (Grid tilesReference cfgReference)
+  | cfg /= cfgReference = enumerate g
+  | otherwise = map (\(Tuple i (x /\ _)) -> Tuple (to2D width i) x)
       $ Array.filter (\((Tuple _ (x /\ y))) -> x /= y)
-      $ enumerateAsGrid width
-      $ (Array.zipWith Tuple tiles tilesReference)
+      $ Array.mapWithIndex Tuple
+      $ Array.zipWith Tuple tiles tilesReference
