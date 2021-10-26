@@ -57,7 +57,7 @@ derive newtype instance monadReaction :: Monad (ReactionM world)
 derive newtype instance semigroupReaction :: Semigroup a => Semigroup (ReactionM world a)
 derive newtype instance monoidReaction :: Monoid a => Monoid (ReactionM world a)
 
-instance monadEffectReaction :: MonadEffect m => MonadEffect (ReactionM world) where
+instance monadEffectReaction :: MonadEffect (ReactionM world) where
   liftEffect = ReactionM <<< liftF <<< Lift <<< liftEffect
 
 instance monadRecReaction :: MonadRec (ReactionM world) where
