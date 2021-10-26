@@ -82,7 +82,8 @@ index (Grid xs { height, width }) { x, y }
 -- | ```
 infixl 8 index as !?
 
--- | Similar to `updateAt`, but doesn't perform any changes when the index is out of bounds.
+-- | Change the element at the specified index, creating a new grid,
+-- | or don't do anything  when the index is out of bounds.
 updateAt' :: forall a. Coordinates -> a -> Grid a -> Grid a
 updateAt' coords new g = fromMaybe g $ updateAt coords new g
 
@@ -90,11 +91,12 @@ updateAt' coords new g = fromMaybe g $ updateAt coords new g
 updateAt :: forall a. Coordinates -> a -> Grid a -> Maybe (Grid a)
 updateAt coords new = modifyAt coords (const new)
 
--- | Similar to `modifyAt`, but doesn't perform any changes when the index is out of bounds.
+-- | Change the element at the specified index, creating a new grid, or don't do anything  when the index is out of bounds.
 modifyAt' :: forall a. Coordinates -> (a -> a) -> Grid a -> Grid a
 modifyAt' coords f g = fromMaybe g $ modifyAt coords f g
 
--- | Apply a function to the element at the specified index, creating a new grid, or returning `Nothing` if the index is out of bounds.
+-- | Apply a function to the element at the specified index, creating a new grid,
+-- | or returning `Nothing` if the index is out of bounds.
 modifyAt :: forall a. Coordinates -> (a -> a) -> Grid a -> Maybe (Grid a)
 modifyAt coords f (Grid xs cfg@{ width }) =
   map (\ys -> Grid ys cfg) $

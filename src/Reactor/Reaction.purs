@@ -101,7 +101,7 @@ foreign import unsafeMergeFields
   -> Record changes
   -> Record world
 
--- | Modify certain fields of the world by passing in new values for them.
+-- | Modify certain fields of the world by passing new values for them.
 -- |
 -- | Returns the value of the new world.
 -- | ```
@@ -123,7 +123,20 @@ updateW
   -> ReactionM (Record world) (Record world)
 updateW changes = modifyW \world -> (unsafeMergeFields world changes)
 
--- | Similar to `updateW`, but doesn't return the value of the new world.
+-- | Modify certain fields of the world by passing new values for them.
+-- | Behaves the same as the `updateW` function, but returns `unit` instead of the new value of the world.
+-- |
+-- | ```
+-- | type World = { player :: { x :: Int, y :: Int } }
+-- |
+-- | handleEvent event = case event of
+-- |   KeyPress { key : "ArrowUp" } -> do
+-- |     oldWorld <- getW
+-- |     updateW_
+-- |       { player: { x : oldWorld.player.x, y: oldWorld.player.y + 1 } }
+-- |     newWorld <- getW
+-- |     log $ "New world is: " <> show newWorld
+-- | ```
 updateW_
   :: forall changes t c world
    . Union changes t world
@@ -133,6 +146,18 @@ updateW_
 updateW_ changes = modifyW_ \world -> (unsafeMergeFields world changes)
 
 -- | Obtain the current value of the world.
+-- |
+-- | ```
+-- | type World = { player :: { x :: Int, y :: Int } }
+-- |
+-- | handleEvent event = case event of
+-- |   KeyPress { key : "Space" } -> do
+-- |     w <- getW
+-- |     log $ "The player is at position: "
+-- |       <> show w.player.x
+-- |       <> ", "
+-- |       <> show w.player.y
+-- | ```
 getW :: forall world. ReactionM world world
 getW = modifyW identity
 
