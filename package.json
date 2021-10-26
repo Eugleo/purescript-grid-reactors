@@ -27,6 +27,7 @@
     "purescript": "^0.14.4",
     "purs-tidy": "^0.5.2",
     "spago": "^0.20.3",
-    "tailwindcss": "^2.2.16"
+    "tailwindcss": "^2.2.16",
+    "purty": "^7.0.0"
   }
 }
