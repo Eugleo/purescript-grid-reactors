@@ -6,7 +6,7 @@ Reactors are values enabling the creation of time-based animations, simulations,
 2. Explain how a state can be drawn on a grid, using our intuitive DSL.
 3. Finally, describe how the state changes depending on incoming mouse and keyboard input events, and if there is a background clock, how the state changes on the ticks.
 
-Then you just call `runReactor [your reactor]` and you're set! The reactor listens for the events, runs the clock, and does the rendering using a Halogen component. Declarative programming at its best.
+Then you just call `runReactor [your reactor]` and you're all set! The reactor listens for the events, runs the clock, and does the rendering using a Halogen component. Declarative programming at its best.
 
 ## Example
 
