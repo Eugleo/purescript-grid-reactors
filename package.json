@@ -22,8 +22,10 @@
   "devDependencies": {
     "ansi-regex": ">=5.0.1",
     "autoprefixer": "^10.3.6",
+    "bower": "^1.8.13",
     "parcel": "^2.0.1",
     "postcss": "^8.3.8",
+    "pulp": "^15.0.0",
     "purescript": "^0.14.4",
     "purs-tidy": "^0.5.2",
     "purty": "^7.0.0",
