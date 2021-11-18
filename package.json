@@ -22,12 +22,12 @@
   "devDependencies": {
     "ansi-regex": ">=5.0.1",
     "autoprefixer": "^10.3.6",
-    "parcel": "^2.0.0-rc.0",
+    "parcel": "^2.0.1",
     "postcss": "^8.3.8",
     "purescript": "^0.14.4",
     "purs-tidy": "^0.5.2",
+    "purty": "^7.0.0",
     "spago": "^0.20.3",
-    "tailwindcss": "^2.2.16",
-    "purty": "^7.0.0"
+    "tailwindcss": "^2.2.16"
   }
 }
