@@ -3,7 +3,8 @@ module Example.Gol.Main where
 import Prelude
 
 import Data.Array as Array
-import Data.Grid (Grid)
+import Data.FunctorWithIndex (mapWithIndex)
+import Data.Grid (Grid, Coordinates)
 import Data.Grid as Grid
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), isJust)
@@ -11,7 +12,7 @@ import Effect (Effect)
 import Reactor (Reactor, executeDefaultBehavior, getW, modifyW_, runReactor, updateW_)
 import Reactor.Events (Event(..), MouseInteractionType(..))
 import Reactor.Graphics.Colors as Color
-import Reactor.Graphics.Drawing (Drawing, Point, drawGrid, fill, tile)
+import Reactor.Graphics.Drawing (Drawing, drawGrid, fill, tile)
 import Reactor.Internal.Helpers (withJust)
 import Reactor.Reaction (Reaction)
 
@@ -28,21 +29,35 @@ data Cell = Dead | Alive Int
 
 derive instance eqCell :: Eq Cell
 
-type World = { cells :: Grid Cell, cursor :: Maybe Point, paused :: Boolean, time :: Int, speed :: Int }
+type World =
+  { cells :: Grid Cell
+  , cursor :: Maybe Coordinates
+  , paused :: Boolean
+  , time :: Int
+  , speed :: Int
+  , lastEdited :: Maybe Coordinates
+  }
 
 reactor :: Reactor World
-reactor = { init, draw, handleEvent, isPaused: \world -> world.paused }
+reactor = { initial, draw, handleEvent, isPaused: \world -> world.paused }
 
-init :: World
-init = { cells: Grid.replicate width height Dead, cursor: Nothing, paused: true, time: 0, speed: 60 }
+initial :: World
+initial =
+  { cells: Grid.replicate width height Dead
+  , cursor: Nothing
+  , paused: true
+  , time: 0
+  , speed: 60
+  , lastEdited: Nothing
+  }
 
 draw :: World -> Drawing
 draw { cells, cursor } = do
+  withJust cursor \position -> fill Color.gray200 $ tile position
   drawGrid cells $ \cell ->
     case cell of
       Dead -> Nothing
       Alive born -> Just $ Color.hsl (toNumber born) 0.6 0.75
-  withJust cursor \position -> fill Color.gray200 $ tile position
 
 handleEvent :: Event -> Reaction World
 handleEvent event = case event of
@@ -62,8 +77,12 @@ handleEvent event = case event of
   where
   togglePause = modifyW_ \world -> world { paused = not world.paused }
   toggleCell position = do
-    { cells: cs, time } <- getW
-    updateW_ { cells: Grid.modifyAt' position (toggle time) cs }
+    { cells: cs, time, lastEdited } <- getW
+    when (Just position /= lastEdited) $
+      updateW_
+        { cells: Grid.modifyAt' position (toggle time) cs
+        , lastEdited: Just position
+        }
   toggle time cell = case cell of
     Dead -> Alive time
     Alive _ -> Dead
@@ -73,7 +92,7 @@ advanceWorld = do
   { cells, time, speed } <- getW
   modifyW_ \w -> w { time = w.time + 1 }
   when (time `mod` speed == 0) $
-    updateW_ { cells: Grid.modifyAllWithIndex (modifyCell cells time) cells }
+    updateW_ { cells: mapWithIndex (modifyCell cells time) cells }
   where
   modifyCell cells time position cell =
     let
