@@ -24,6 +24,7 @@ import Data.Array ((..))
 import Data.Array as Array
 import Data.Foldable (class Foldable, foldMap, foldl, foldr, length)
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
+import Data.Int.Bits ((.&.))
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
@@ -47,11 +48,15 @@ instance Foldable Grid where
   foldl f z (Grid xs _) = foldl f z xs
   foldMap f (Grid xs _) = foldMap f xs
 
+-- | Create a `Grid` of the given width and height from any `Foldable`, like arrays and lists.
+-- | If the number of elements in array isn't exactly equal to `width * height` — in other words, there are
+-- | too many or too few elements — return `Nothing`.&.
 fromFoldable :: forall f a. Foldable f ⇒ Int -> Int -> f a → Maybe (Grid a)
 fromFoldable width height xs
   | length xs /= width * height = Nothing
   | otherwise = Just $ Grid (Array.fromFoldable xs) { width, height }
 
+-- | Return the elements of the grid in a flat array, within a tuple containing their original 2D coordinates.
 enumerate :: forall a. Grid a -> Array (Tuple Coordinates a)
 enumerate g = xs
   where
@@ -102,14 +107,33 @@ modifyAt coords f (Grid xs cfg@{ width }) =
   map (\ys -> Grid ys cfg) $
     Array.modifyAt (to1D width coords) f xs
 
+-- | Fill a grid of size `width x height` with the value `a`. The value is the same
+-- | in all of the cells in the grid.
 replicate :: forall a. Int -> Int -> a -> Grid a
 replicate width height x = Grid (Array.replicate (width * height) x) { width, height }
 
+-- | Create a grid of size `width x height` filled with values returned by a `(Coordinates -> a)` function.
+-- | The funcion gets called on every coordinate in the grid and the value it returns is used to fill that specific position.
+-- | The smallest coordinate is `{ x: 0, y: 0 }` in the upper-left corner of the grid.
+-- |
+-- | It is possible to implement `replicate` with the help of `construct`:
+-- | ```
+-- | replicate w h value = Grid.construct w h (\_ -> value)
+-- | ```
+-- |
+-- | For example, `Grid.construct 3 3 (\{x, y} -> (x - y) == 0)` would create the following grid
+-- | ```
+-- | true  false false
+-- | false true  false
+-- | false false true
+-- | ```
 construct :: forall a. Int -> Int -> (Coordinates -> a) -> Grid a
 construct width height f = Grid xs { width, height }
   where
   xs = map (f <<< to2D width) $ 0 .. (width * height)
 
+-- | Return an array of elements and their coordinates where the two supplied grids differ.
+-- | If the grids have different dimensions, return all of the elements from the first grid.
 differencesFrom
   :: forall a
    . Eq a
