@@ -16,16 +16,18 @@ module Data.Grid
   , Coordinates
   , fromFoldable
   , construct
+  , constructM
   ) where
 
 import Prelude
 
 import Data.Array ((..))
 import Data.Array as Array
-import Data.Foldable (class Foldable, foldMap, foldl, foldr, length)
+import Data.Foldable (class Foldable, foldMap, foldl, foldr, for_, length)
 import Data.FunctorWithIndex (class FunctorWithIndex, mapWithIndex)
 import Data.Int.Bits ((.&.))
 import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
 
@@ -131,6 +133,11 @@ construct :: forall a. Int -> Int -> (Coordinates -> a) -> Grid a
 construct width height f = Grid xs { width, height }
   where
   xs = map (f <<< to2D width) $ 0 .. (width * height)
+
+constructM :: forall m a. Monad m => Int -> Int -> (Coordinates -> m a) -> m (Grid a)
+constructM width height f = map (\ts -> Grid ts { width, height }) tilesM
+  where
+  tilesM = traverse (f <<< to2D width) $ 0 .. (width * height)
 
 -- | Return an array of elements and their coordinates where the two supplied grids differ.
 -- | If the grids have different dimensions, return all of the elements from the first grid.
