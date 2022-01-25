@@ -100,8 +100,8 @@ handleEvent event = case event of
 
   where
   updateSpeed d = do
-    world <- getW
-    widget "frequency" $ Label { content: show world.frequency }
+    world <- modifyW \w -> w { speed = max (w.speed + d) 0 }
+    widget "frequency" $ Label { content: show world.speed }
 
   togglePause = modifyW_ \world -> world { paused = not world.paused }
   toggleCell position = do
