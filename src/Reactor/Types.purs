@@ -9,9 +9,11 @@
 
 module Reactor.Types (Reactor, Configuration) where
 
-import Reactor.Reaction (Reaction)
+import Data.Tuple.Nested (type (/\))
 import Reactor.Events (Event)
 import Reactor.Graphics.Drawing (Drawing)
+import Reactor.Internal.Widget (Widget)
+import Reactor.Reaction (Reaction)
 
 -- | The reactor is a simple record. Reactors are parametrized over the type of the `world` which is saved in the reactor.
 -- |
@@ -47,4 +49,5 @@ type Configuration =
   { title :: String
   , width :: Int
   , height :: Int
+  , widgets :: Array (String /\ Widget)
   }

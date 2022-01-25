@@ -1,15 +1,18 @@
 module Reactor.Reaction
-  ( Reaction(..)
+  ( Dimensions
+  , Reaction(..)
+  , ReactionF(..)
+  , ReactionM(..)
+  , widget
+  , widget'
   , dimensions
+  , executeDefaultBehavior
+  , getW
   , modifyW
   , modifyW_
+  , removeWidget'
   , updateW
   , updateW_
-  , getW
-  , executeDefaultBehavior
-  , ReactionM(..)
-  , ReactionF(..)
-  , Dimensions
   ) where
 
 import Prelude
@@ -19,6 +22,7 @@ import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Prim.Row (class Union, class Nub)
+import Reactor.Internal.Widget (Ordering(..), Widget(..))
 
 type Dimensions =
   { width :: Int
@@ -33,6 +37,8 @@ data ReactionF world a
   = Lift (Effect a)
   | Modify (world -> world) (world -> a)
   | Dimensions (Dimensions -> a)
+  | Widget String Ordering Widget (a)
+  | RemoveWidget String (a)
   | ExecuteDefaultBehavior (a)
 
 derive instance functorReactionF :: Functor m => Functor (ReactionF world)
@@ -65,6 +71,15 @@ instance monadRecReaction :: MonadRec (ReactionM world) where
     k a >>= case _ of
       Loop x -> tailRecM k x
       Done y -> pure y
+
+widget :: forall world. String -> Widget -> Reaction world
+widget uid w = ReactionM $ liftF $ Widget uid Last w unit
+
+widget' :: forall world. String -> Widget -> Reaction world
+widget' uid w = ReactionM $ liftF $ Widget uid First w unit
+
+removeWidget' :: forall world. String -> Reaction world
+removeWidget' uid = ReactionM $ liftF $ RemoveWidget uid unit
 
 -- | Get a record of the following:
 -- | - `height :: Int`, the height of the grid, in tiles

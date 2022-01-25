@@ -7,20 +7,12 @@ import Data.Grid (differencesFrom)
 import Data.Grid as Grid
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..))
+import Data.Tuple (Tuple(..), snd)
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (throw)
-import Graphics.CanvasAction
-  ( class CanvasStyle
-  , class MonadCanvasAction
-  , clearRect
-  , filled
-  , getCanvasElementById
-  , getContext2D
-  , launchCanvasAff_
-  ) as Canvas
+import Graphics.CanvasAction (class CanvasStyle, class MonadCanvasAction, clearRect, filled, getCanvasElementById, getContext2D, launchCanvasAff_) as Canvas
 import Graphics.CanvasAction.Path (FillRule(..), arcBy_, fill, moveTo, runPath) as Canvas
 import Halogen as H
 import Halogen.HTML as HH
@@ -29,17 +21,11 @@ import Halogen.Hooks (HookM)
 import Halogen.Hooks as Hooks
 import Halogen.Query.Event (eventListener)
 import Halogen.Subscription (Listener, create, notify)
-import Reactor.Events
-  ( Event(..)
-  , MouseInteractionType(..)
-  , keypressEventFromDOM
-  , mouseEventFromDOM
-  , optionallyPreventDefault
-  , windowPerformanceNow
-  )
+import Reactor.Events (Event(..), MouseInteractionType(..), keypressEventFromDOM, mouseEventFromDOM, optionallyPreventDefault, windowPerformanceNow)
 import Reactor.Internal.Eval (evalAction, renderDrawing)
 import Reactor.Internal.Helpers (withJust)
 import Reactor.Internal.Types (Cell(..), Properties, State)
+import Reactor.Internal.Widget (Widget(..))
 import Reactor.Types (Reactor, Configuration)
 import Web.HTML (window) as Web
 import Web.HTML.HTMLCanvasElement as HTMLCanvasElement
@@ -64,15 +50,16 @@ component
   => Reactor world
   -> Configuration
   -> H.Component q i o m
-component { initial, draw, handleEvent, isPaused } { title, width, height } =
+component { initial, draw, handleEvent, isPaused } { title, width, height, widgets } =
   Hooks.component \_ _ -> Hooks.do
-    _ /\ stateId <- Hooks.useState
+    { widgets } /\ stateId <- Hooks.useState
       { context: Nothing
       , renderListener: Nothing
       , mouseButtonPressed: false
       , world: initial
       , lastTick: 0.0
       , lastGrid: Nothing
+      , widgets: widgets
       }
     { tileSize } /\ propsId <- Hooks.useState
       { title, draw, handleEvent, width, height, tileSize: 30, isPaused }
@@ -97,17 +84,30 @@ component { initial, draw, handleEvent, isPaused } { title, width, height } =
 
     Hooks.pure
       $ HH.div
-          [ HP.classes [ H.ClassName "m-auto p-16" ] ]
+          [ HP.classes [ H.ClassName "m-auto p-16 max-w-4xl" ] ]
           [ HH.h1 [ HP.classes [ H.ClassName "text-3xl font-bold mb-8" ] ] [ HH.text title ]
-          , HH.canvas
-              [ HP.classes
-                  [ H.ClassName "rounded-lg bg-gray-100" ]
-              , HP.id_ canvasId
-              , HP.width $ width * tileSize
-              , HP.height $ height * tileSize
+          , HH.div [ HP.classes [ H.ClassName "flex flex-row space-x-6" ] ]
+              [ HH.div [ HP.classes [ H.ClassName "rounded-3xl canvas-shadow bg-gray-100 p-6" ] ]
+                  [ HH.canvas
+                      [ HP.id_ canvasId
+                      , HP.width $ width * tileSize
+                      , HP.height $ height * tileSize
+                      ]
+                  ]
+              , HH.div [ HP.classes [ H.ClassName "flex flex-col space-y-2" ] ]
+                  (map (renderWidget <<< snd) widgets)
               ]
           ]
   where
+  renderWidget (Label { content }) =
+    HH.p
+      [ HP.classes [ H.ClassName "font-thin text-3xl" ] ]
+      [ HH.text content ]
+  renderWidget (Section section) =
+    HH.h2
+      [ HP.classes [ H.ClassName "font-bold text-lg text-gray-800 widget section" ] ]
+      [ HH.text section.title ]
+
   setupRedrawEvents internalId = do
     { emitter, listener } <- liftEffect create
     Hooks.subscribe' $ const emitter

@@ -1,4 +1,14 @@
-module Example.Gol.Main where
+module Example.Gol.Main
+  ( Cell(..)
+  , World
+  , draw
+  , handleEvent
+  , height
+  , initial
+  , main
+  , reactor
+  , width
+  ) where
 
 import Prelude
 
@@ -8,13 +18,15 @@ import Data.Grid (Grid, Coordinates)
 import Data.Grid as Grid
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..), isJust)
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
-import Reactor (Reactor, executeDefaultBehavior, getW, modifyW_, runReactor, updateW_)
+import Reactor (Reactor, executeDefaultBehavior, getW, modifyW, modifyW_, runReactor, updateW_)
 import Reactor.Events (Event(..), MouseInteractionType(..))
 import Reactor.Graphics.Colors as Color
 import Reactor.Graphics.Drawing (Drawing, drawGrid, fill, tile)
 import Reactor.Internal.Helpers (withJust)
-import Reactor.Reaction (Reaction)
+import Reactor.Internal.Widget (Widget(..))
+import Reactor.Reaction (Reaction, widget)
 
 width :: Int
 width = 20
@@ -23,7 +35,17 @@ height :: Int
 height = 20
 
 main :: Effect Unit
-main = runReactor reactor { title: "Game of Life", width, height }
+main = runReactor reactor
+  { title: "Game of Life"
+  , width
+  , height
+  , widgets:
+      [ ("section-1" /\ Section { title: "Update frequency" })
+      , ("frequency" /\ Label { content: show 40 })
+      , ("section-2" /\ Section { title: "Number of generations" })
+      , ("generation" /\ Label { content: show 0 })
+      ]
+  }
 
 data Cell = Dead | Alive Int
 
@@ -34,6 +56,7 @@ type World =
   , cursor :: Maybe Coordinates
   , paused :: Boolean
   , time :: Int
+  , generation :: Int
   , speed :: Int
   , lastEdited :: Maybe Coordinates
   }
@@ -47,7 +70,8 @@ initial =
   , cursor: Nothing
   , paused: true
   , time: 0
-  , speed: 60
+  , generation: 0
+  , speed: 40
   , lastEdited: Nothing
   }
 
@@ -62,8 +86,8 @@ draw { cells, cursor } = do
 handleEvent :: Event -> Reaction World
 handleEvent event = case event of
   KeyPress { key: " " } -> togglePause
-  KeyPress { key: "ArrowDown" } -> modifyW_ \w -> w { speed = max (w.speed - 10) 0 }
-  KeyPress { key: "ArrowUp" } -> modifyW_ \w -> w { speed = w.speed + 10 }
+  KeyPress { key: "ArrowDown" } -> updateSpeed (-1)
+  KeyPress { key: "ArrowUp" } -> updateSpeed 1
 
   Mouse { type: Move, position } ->
     updateW_ { cursor: Just $ position }
@@ -75,6 +99,10 @@ handleEvent event = case event of
   _ -> executeDefaultBehavior
 
   where
+  updateSpeed d = do
+    world <- getW
+    widget "frequency" $ Label { content: show world.frequency }
+
   togglePause = modifyW_ \world -> world { paused = not world.paused }
   toggleCell position = do
     { cells: cs, time, lastEdited } <- getW
@@ -89,10 +117,15 @@ handleEvent event = case event of
 
 advanceWorld :: Reaction World
 advanceWorld = do
-  { cells, time, speed } <- getW
+  { cells, time, speed, generation } <- getW
   modifyW_ \w -> w { time = w.time + 1 }
-  when (time `mod` speed == 0) $
-    updateW_ { cells: mapWithIndex (modifyCell cells time) cells }
+  when ((toNumber time / 60.0) > 1.0 / toNumber speed) $ do
+    updateW_
+      { cells: mapWithIndex (modifyCell cells time) cells
+      , generation: generation + 1
+      , time: 0
+      }
+    widget "generation" $ Label { content: show generation }
   where
   modifyCell cells time position cell =
     let
