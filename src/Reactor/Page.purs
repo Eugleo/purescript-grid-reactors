@@ -2,12 +2,13 @@ module Reactor.Page (component) where
 
 import Prelude
 
+import Data.Array as Array
 import Data.Foldable (for_)
 import Data.Grid (differencesFrom)
 import Data.Grid as Grid
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..), snd)
+import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Class (class MonadEffect, liftEffect)
@@ -87,25 +88,34 @@ component { initial, draw, handleEvent, isPaused } { title, width, height, widge
           [ HP.classes [ H.ClassName "m-auto p-16 max-w-4xl" ] ]
           [ HH.h1 [ HP.classes [ H.ClassName "text-3xl font-bold mb-8" ] ] [ HH.text title ]
           , HH.div [ HP.classes [ H.ClassName "flex flex-row space-x-6" ] ]
-              [ HH.div [ HP.classes [ H.ClassName "rounded-3xl canvas-shadow bg-gray-100 p-6" ] ]
+              [ HH.div
+                  [ HP.classes [ H.ClassName "rounded-3xl bg-gray-100 p-6" ] ]
                   [ HH.canvas
                       [ HP.id_ canvasId
                       , HP.width $ width * tileSize
                       , HP.height $ height * tileSize
                       ]
                   ]
-              , HH.div [ HP.classes [ H.ClassName "flex flex-col space-y-2" ] ]
-                  (map (renderWidget <<< snd) widgets)
+              , HH.div [ HP.classes [ H.ClassName "flex flex-col" ] ]
+                  (Array.mapWithIndex (\i (_ /\ w) -> renderWidget i w) widgets)
               ]
           ]
   where
-  renderWidget (Label { content }) =
+  renderWidget i (Label { content }) =
     HH.p
-      [ HP.classes [ H.ClassName "font-thin text-3xl" ] ]
+      [ HP.classes
+          [ H.ClassName "font-thin text-3xl"
+          , H.ClassName $ if i > 0 then "mt-2" else ""
+          ]
+      ]
       [ HH.text content ]
-  renderWidget (Section section) =
+  renderWidget i (Section section) =
     HH.h2
-      [ HP.classes [ H.ClassName "font-bold text-lg text-gray-800 widget section" ] ]
+      [ HP.classes
+          [ H.ClassName "font-bold text-lg text-gray-800"
+          , H.ClassName $ if i > 0 then "mt-6" else ""
+          ]
+      ]
       [ HH.text section.title ]
 
   setupRedrawEvents internalId = do
