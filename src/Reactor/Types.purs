@@ -44,6 +44,7 @@ type Reactor world =
 -- | - `title`, the title of the webpage where the reactor is rendered
 -- | - `width`, the width of the grid, in tiles
 -- | - `height` the height of the grid, in tiles
+-- | - `widgets` is an array of widgets that are present in the Reactor from the start, ordered from top-most to bottom-most
 -- | Notably, the size of the rendered tiles isn't customizable and is set to 30pts.
 type Configuration =
   { title :: String
