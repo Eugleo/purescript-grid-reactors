@@ -18,6 +18,7 @@ module Reactor
   ( runReactor
   , module Reactor.Reaction
   , module Reactor.Types
+  , module Reactor.Internal.Widget
   , module Reactor.Internal.Helpers
   ) where
 
@@ -38,6 +39,7 @@ import Reactor.Reaction
   , dimensions
   )
 import Reactor.Types (Reactor, Configuration)
+import Reactor.Internal.Widget (Widget(..))
 
 -- | Start a `Reactor` and render it asynchronously as a Halogen component with the given `Configuration`.
 -- | The reactor's world is required to have a field named `paused` that is used to decide
