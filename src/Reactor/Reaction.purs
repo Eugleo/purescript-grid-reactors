@@ -72,12 +72,19 @@ instance monadRecReaction :: MonadRec (ReactionM world) where
       Loop x -> tailRecM k x
       Done y -> pure y
 
+-- | Add a `Widget` with a given identifier to the reactor.
+-- | If a widget with the same identifier already exists, it is replaced by the new one.
+-- | Otherwise, the new widget is added to the end of the Widget array, i.e. to the bottom-most position.
 widget :: forall world. String -> Widget -> Reaction world
 widget uid w = ReactionM $ liftF $ Widget uid Last w unit
 
+-- | Add a `Widget` with a given identifier to the reactor.
+-- | If a widget with the same identifier already exists, it is replaced by the new one.
+-- | Otherwise, the new widget is inserted the beginning of the Widget array, i.e. to the top-most position.
 widget' :: forall world. String -> Widget -> Reaction world
 widget' uid w = ReactionM $ liftF $ Widget uid First w unit
 
+-- | Remove a `Widget` with a given identifier from the reactor. If there is no widget with the given identifier, do nothing.
 removeWidget' :: forall world. String -> Reaction world
 removeWidget' uid = ReactionM $ liftF $ RemoveWidget uid unit
 
