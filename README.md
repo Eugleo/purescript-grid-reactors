@@ -1,5 +1,8 @@
 # Grid Reactors for Purescript
 
+<img src='[figure/rstudio.png](https://github.com/Eugleo/purescript-grid-reactors/assets/21257632/7c148f50-9f3d-4135-9842-ddd09b4d4115)' width='200'>
+
+
 Reactors are values enabling the creation of time-based animations, simulations, and interactive programs, as per [Pyret Documentation](https://www.pyret.org/docs/latest/reactors.html). This particular library brings the fun of reactors into Purescript, allowing you to create simple grid-based games in 3 steps:
 
 1. Tell the reactor the initial state of your game, e.g. the positions of the player and the enemies.
